@@ -1,0 +1,245 @@
+﻿<Application x:Class="NexusSales.UI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:NexusSales.FrontEnd.Converters;assembly=NexusSales.FrontEnd"
+             xmlns:converters="clr-namespace:NexusSales.UI.Converters"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <!-- Keep StartupUri if LoginWindow is your initial window -->
+
+    <Application.Resources>
+        <!-- The main ResourceDictionary that holds all application-wide resources -->
+        <ResourceDictionary>
+            <!-- Merged Dictionaries go inside this ResourceDictionary -->
+            <ResourceDictionary.MergedDictionaries>
+                
+                <ResourceDictionary Source="/Themes/DarkMode.xaml"/>
+                <!-- Add any other resource dictionaries here -->
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Individual resources (like converters and font family) also go inside this same ResourceDictionary -->
+            <converters:WidthPercentConverter x:Key="WidthPercentConverter"/>
+            <converters:HeightPercentConverter x:Key="HeightPercentConverter"/>
+
+            <!--bool to visibility converter-->
+            <converters:BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <local:BoolToOpacityConverter x:Key="BoolToOpacityConverter" />
+            <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+            <converters:UnreadNotificationBackgroundConverter x:Key="UnreadNotificationBackgroundConverter"/>
+            <converters:GreaterThanZeroToVisibilityConverter x:Key="GreaterThanZeroToVisibilityConverter"/>
+            
+            <!-- Brushes -->
+            <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}"/>
+            <SolidColorBrush x:Key="BackgroundLiteBrush" Color="{StaticResource BackgroundLiteColor}"/>
+            <SolidColorBrush x:Key="FrontgroundLiteBrush" Color="{StaticResource FrontgroundLiteColor}"/>
+            <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#161123"/>
+            <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+            <SolidColorBrush x:Key="FontNormalBrush" Color="{StaticResource FontNormal}"/>
+            <SolidColorBrush x:Key="FontSuccessfulBrush" Color="{StaticResource FontSuccessful}"/>
+            <SolidColorBrush x:Key="FontWarningBrush" Color="{StaticResource FontWarning}"/>
+            <SolidColorBrush x:Key="FontAlertBrush" Color="{StaticResource FontAlert}"/>
+            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+            
+            <!-- Login input styles (now global) -->
+            <Style x:Key="LoginTextBoxStyle" TargetType="TextBox">
+                <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+                <Setter Property="Foreground" Value="{StaticResource FontNormalBrush}"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="12,0,36,0"/>
+                <Setter Property="Margin" Value="0,8,0,8"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="Height" Value="25"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TextBox">
+                            <Border x:Name="border"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="20">
+                                <ScrollViewer x:Name="PART_ContentHost"/>
+                            </Border>
+                            <!-- Remove or comment out any triggers that change BorderBrush/BorderThickness on focus/hover -->
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="LoginPasswordBoxStyle" TargetType="PasswordBox">
+                <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+                <Setter Property="Foreground" Value="{StaticResource FontNormalBrush}"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="12,0,36,0"/>
+                <Setter Property="Margin" Value="0,8,0,8"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="Height" Value="25"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="PasswordBox">
+                            <Border x:Name="border"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="20">
+                                <ScrollViewer x:Name="PART_ContentHost"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="BackButtonStyle" TargetType="Button">
+                <Setter Property="Foreground" Value="{StaticResource FontNormalBrush}" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="Padding" Value="8,2,8,2" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Set the default FontFamily for the entire application here -->
+            <!-- The URI format is: "pack://application:,,,/YourAssemblyName;component/YourFolderPath/#YourFontFamilyName" -->
+            <FontFamily x:Key="RobotoFontFamily">
+                pack://application:,,,/MahApps.Metro.Resources;component/Fonts/#FontAwesome
+            </FontFamily>
+
+            <!-- Apply the font family to all TextBlock, Button, etc. or to the entire Window -->
+            <Style TargetType="{x:Type Control}">
+                <Setter Property="FontFamily" Value="Cascadia Code"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <!-- Increased font weight -->
+            </Style>
+            <Style TargetType="{x:Type TextBlock}">
+                <Setter Property="FontFamily" Value="Cascadia Code"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <!-- Increased font weight -->
+            </Style>
+            <Style TargetType="{x:Type Window}">
+                <Setter Property="FontFamily" Value="Cascadia Code"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <!-- Increased font weight -->
+            </Style>
+            <!-- You might need to add other TargetTypes like TextBox, PasswordBox etc. -->
+            <Style x:Key="SearchTextBox" TargetType="TextBox">
+                <Setter Property="Background" Value="{StaticResource FrontgroundBrush}"/>
+                <Setter Property="Foreground" Value="{StaticResource FontDarkBrush}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Padding" Value="40 15 15 15"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TextBoxBase">
+                            <Border x:Name="border" CornerRadius="7" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}"
+                SnapsToDevicePixels="True">
+                                <ScrollViewer x:Name="PART_ContentHost" Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+
+                            </Border>
+
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" TargetName="border"/>
+                                </Trigger>
+
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" TargetName="border"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="HeaderButtons" TargetType="Button" BasedOn="{StaticResource ZoomAnimation}">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Width" Value="45"/>
+                <Setter Property="Height" Value="45"/>
+                <Setter Property="Foreground" Value="{StaticResource FontNormalBrush}"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Margin" Value="3 0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="50">
+                                <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+
+                    </Trigger>
+
+                    <DataTrigger Binding="{Binding ElementName=menubutton, Path=IsActive}" Value="True">
+                        <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                        <Setter Property="Tag" Value="Visible"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="CircularProgressBarStyle" TargetType="ProgressBar">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ProgressBar">
+                            <Grid x:Name="TemplateRoot">
+                                <Ellipse x:Name="PART_Track" 
+                                         Fill="Transparent" 
+                                         Stroke="{TemplateBinding BorderBrush}"
+                                         StrokeThickness="4"/>
+                                <Path x:Name="PART_Indicator" 
+                                      Stroke="{TemplateBinding Foreground}"
+                                      StrokeThickness="4"
+                                      StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round">
+                                    <Path.Data>
+                                        <PathGeometry>
+                                            <PathFigure>
+                                                <ArcSegment Size="20,20" 
+                                                            IsLargeArc="False" 
+                                                            SweepDirection="Clockwise"/>
+                                            </PathFigure>
+                                        </PathGeometry>
+                                    </Path.Data>
+                                    <Path.RenderTransform>
+                                        <RotateTransform x:Name="RotateTransform" CenterX="20" CenterY="20"/>
+                                    </Path.RenderTransform>
+                                </Path>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsIndeterminate" Value="True">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard RepeatBehavior="Forever">
+                                                <DoubleAnimation 
+                                                    Storyboard.TargetName="RotateTransform"
+                                                    Storyboard.TargetProperty="Angle"
+                                                    From="0" To="360" Duration="0:0:2"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

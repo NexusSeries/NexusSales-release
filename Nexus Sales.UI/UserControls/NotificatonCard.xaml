@@ -1,0 +1,63 @@
+﻿<UserControl x:Class="NexusSales.UI.UserControls.NotificationCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Height="Auto" Width="Auto"
+             Opacity="0">
+    <UserControl.Resources>
+        <Style TargetType="Button" x:Key="ButtonStyle">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                </Trigger>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="UserControl.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                     From="0" To="1" Duration="0:0:0.25"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+    <Border Margin="8,8,8,0" Padding="16" CornerRadius="15" Background="{StaticResource FrontgroundLiteBrush}">
+        <Grid>
+            <StackPanel Margin="0,0,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding Title}" FontWeight="Bold" HorizontalAlignment="Left" FontSize="11" Foreground="{StaticResource AccentElectricBrush}"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Timestamp, StringFormat='  •  {0:g}'}" HorizontalAlignment="Right" FontSize="10" Foreground="{StaticResource FontDarkBrush}" Margin="0 0 0 0"/>
+                </Grid>
+                <TextBlock Text="{Binding Message}" Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap" Margin="0,8,0,0" FontSize="14"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                    <Button x:Name="PinBtn" Content="Pin" FontSize="12" FontWeight="Bold" Foreground="#007ACC" Command="{Binding DataContext.PinNotificationCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" FocusVisualStyle="{x:Null}" Cursor="Hand" Style="{StaticResource ButtonStyle}"/>
+                    <TextBlock Text="  |  " FontSize="12" Foreground="Gray"/>
+                    <Button x:Name="Collabsebtn" Content="{Binding IsRead, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Unread}" FontSize="12" FontWeight="Bold" Visibility="{Binding IsRead, Converter={StaticResource InverseBooleanToVisibilityConverter}}" Click="CollapseButton_Click" Foreground="#EA4C4C" Background="Transparent" BorderBrush="Transparent" BorderThickness="0" Cursor="Hand" Style="{StaticResource ButtonStyle}"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

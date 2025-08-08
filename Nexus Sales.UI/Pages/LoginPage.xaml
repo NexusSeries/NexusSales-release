@@ -1,0 +1,215 @@
+﻿<Page x:Class="NexusSales.UI.Pages.LoginPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:uc="clr-namespace:NexusSales.UI.UserControls"
+      xmlns:Icons="http://metro.mahapps.com/winfx/xaml/iconpacks"
+      Background="Transparent">
+    <Page.Resources>
+        <!-- No blue border for TextBox -->
+        <Style TargetType="TextBox" x:Key="NoFocusBorderTextBox">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="BorderBrush" Value="{StaticResource FontNormalBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="20">
+                            <ScrollViewer x:Name="PART_ContentHost"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- No blue border for PasswordBox -->
+        <Style TargetType="PasswordBox" x:Key="NoFocusBorderPasswordBox">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="BorderBrush" Value="{StaticResource FontNormalBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="20">
+                            <ScrollViewer x:Name="PART_ContentHost"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Modern CheckBox Style -->
+        <Style x:Key="ModernCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Grid Width="22" Height="22" Margin="0,0,8,0">
+                                <Border x:Name="Border"
+                                        Background="#18181C"
+                                        BorderBrush="#AAA"
+                                        BorderThickness="2"
+                                        CornerRadius="6"
+                                        SnapsToDevicePixels="True">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#00BFFF" BlurRadius="0" ShadowDepth="0" Opacity="0"/>
+                                    </Border.Effect>
+                                </Border>
+                                <Path x:Name="CheckMark"
+                                      Data="M 5 12 L 10 17 L 17 6"
+                                      Stroke="#00BFFF"
+                                      StrokeThickness="2.5"
+                                      StrokeEndLineCap="Round"
+                                      StrokeStartLineCap="Round"
+                                      Visibility="Collapsed"/>
+                            </Grid>
+                            <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#00BFFF"/>
+                                <Setter TargetName="Border" Property="Background" Value="#222A3A"/>
+                                <Setter TargetName="Border" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="#00BFFF" BlurRadius="8" ShadowDepth="0" Opacity="0.6"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#00BFFF"/>
+                                <Setter TargetName="Border" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="#00BFFF" BlurRadius="6" ShadowDepth="0" Opacity="0.4"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#00BFFF"/>
+                                <Setter TargetName="Border" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="#00BFFF" BlurRadius="8" ShadowDepth="0" Opacity="0.5"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <!-- 1. Login Title -->
+        <TextBlock Grid.Row="0" Text="Login" FontSize="28" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,16,0,16"/>
+        <!-- 2. Inputs -->
+        <StackPanel Grid.Row="1" Margin="32,0,32,0">
+            <Border CornerRadius="20" Background="{StaticResource BackgroundBrush}" BorderBrush="{StaticResource FontNormalBrush}" BorderThickness="1">
+                <Grid Background="Transparent">
+                    <TextBox x:Name="UsernameBox"
+                             Foreground="{StaticResource FontDarkBrush}"
+                             Style="{StaticResource LoginTextBoxStyle}"
+                             Background="Transparent"
+                             TextChanged="UsernameBox_TextChanged"/>
+                    <!-- Placeholder TextBlock overlay -->
+                    <TextBlock x:Name="UsernamePlaceholder"
+                               Text="Email"
+                               Foreground="{StaticResource FontDarkBrush}"
+                               Margin="14,0,0,0"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"
+                               Visibility="Visible"/>
+                    <Icons:PackIconMaterial Kind="Account" FontSize="18" Foreground="{StaticResource FontNormalBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,12,0"/>
+                </Grid>
+            </Border>
+            <Border CornerRadius="20" Margin="0 ,15,0,0" Background="{StaticResource BackgroundBrush}" BorderBrush="{StaticResource FontNormalBrush}" BorderThickness="1">
+                <Grid>
+                    <!-- Hidden PasswordBox -->
+                    <PasswordBox x:Name="PasswordBox"
+                                 Background="Transparent"
+                                 Foreground="{StaticResource FontDarkBrush}"
+                                 Style="{StaticResource LoginPasswordBoxStyle}"
+                                 PasswordChanged="PasswordBox_PasswordChanged"
+                                 Visibility="Visible"/>
+                    <!-- Visible TextBox for plain text password -->
+                    <TextBox x:Name="PasswordTextBox"
+                             Background="Transparent"
+                             Foreground="{StaticResource FontDarkBrush}"
+                             Style="{StaticResource LoginTextBoxStyle}"
+                             Visibility="Collapsed"
+                             TextChanged="PasswordTextBox_TextChanged"/>
+                    <!-- Placeholder TextBlock overlay -->
+                    <TextBlock x:Name="PasswordPlaceholder"
+                               Text="Password"
+                               Foreground="{StaticResource FontDarkBrush}"
+                               Margin="14,0,0,0"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"
+                               Visibility="Visible"/>
+                    <Icons:PackIconMaterial x:Name="PasswordIcon" Kind="Lock" FontSize="18" Foreground="{StaticResource FontNormalBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,12,0"/>
+                </Grid>
+            </Border>
+        </StackPanel>
+        <!-- 3. Options -->
+        <Grid Grid.Row="2" Margin="32,8,32,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="RememberMeCheckBox" Cursor="Hand" Content="Remember me" Style="{StaticResource ModernCheckBox}" VerticalAlignment="Center"/>
+            <Button Grid.Column="1" Content="Forgot password?" HorizontalAlignment="Right" Foreground="White" Background="Transparent" BorderThickness="0" Cursor="Hand"
+                    Click="ForgotPassword_Click">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="White"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Setter Property="OverridesDefaultStyle" Value="True"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+        <!-- 4. Login button + Register -->
+        <StackPanel Grid.Row="3" Margin="32,16,32,0">
+            <uc:FirstButton Text="Login" Height="40" Width="220" GlowEffect="True" GlowColor="AliceBlue" ZoomEffect="True" ButtonColor="White" Radius="20" BorderBrush="Transparent" BorderThickness="0.2" Click="LoginButton_Click" HorizontalAlignment="Center"/>
+            <TextBlock HorizontalAlignment="Center" Foreground="White" Margin="0,8,0,0">
+                Don't have an account?
+                <Run Text=" " />
+                <Run Text="Register" FontWeight="Bold" Foreground="LightBlue"
+                     TextDecorations="Underline"
+                     Cursor="Hand"
+                     MouseLeftButtonUp="RegisterText_MouseLeftButtonUp"/>
+            </TextBlock>
+        </StackPanel>
+        <!-- 5. Status Text -->
+        <TextBlock x:Name="StatusText"
+                   Grid.Row="4"
+                   HorizontalAlignment="Center"
+                   Foreground="LightBlue"
+                   FontWeight="Bold"
+                   Visibility="Collapsed"
+                   Margin="0,8,0,0"/>
+    </Grid>
+</Page>

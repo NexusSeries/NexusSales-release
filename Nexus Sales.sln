@@ -1,0 +1,92 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36203.30
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexus Sales.Core", "Nexus Sales.Core\Nexus Sales.Core.csproj", "{795A29B7-FFDF-4BD8-BC36-13E1A5C31A17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexus Sales.Services", "Nexus Sales.Services\Nexus Sales.Services.csproj", "{132256F0-5387-4B11-B7D7-8BD5297C4C6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexus Sales.Data", "Nexus Sales.Data\Nexus Sales.Data.csproj", "{5F3C4B67-12DD-4C92-9F4A-5CFDA47093BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexus Sales.Utils", "Nexus Sales.Utils\Nexus Sales.Utils.csproj", "{0E0E2116-CB82-4615-A344-9E0951ACFF3B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexus Sales.Tests", "Nexus Sales.Tests\Nexus Sales.Tests.csproj", "{7557B2CB-38A1-4FA2-9F1B-C54FAF82890A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nexus Sales.UI", "Nexus Sales.UI\Nexus Sales.UI.csproj", "{5C5CCFA5-4EEE-490E-B0DD-6B27C4CB87C7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		Core.md = Core.md
+		README2.md = README2.md
+		Structure.txt = Structure.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Native", "Native", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		build.bat = build.bat
+		guard.asm = guard.asm
+		guard.def = guard.def
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusSales.FrontEnd", "NexusSales.FrontEnd\NexusSales.FrontEnd.csproj", "{193E42F4-7280-4EDD-B180-BD2802E73727}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusSales.Common", "NexusSales.Common\NexusSales.Common.csproj", "{BF7972FE-C8EB-4AB1-82B0-9D6250E94D09}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Problems", "Problems", "{0CC66223-CAF7-4197-969F-FE277A9FC380}"
+	ProjectSection(SolutionItems) = preProject
+		Missing.md = Missing.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusUpdate", "NexusUpdate\NexusUpdate.csproj", "{D3FA73CC-5B17-4969-9585-5A4D64725179}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{795A29B7-FFDF-4BD8-BC36-13E1A5C31A17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{795A29B7-FFDF-4BD8-BC36-13E1A5C31A17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{795A29B7-FFDF-4BD8-BC36-13E1A5C31A17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{795A29B7-FFDF-4BD8-BC36-13E1A5C31A17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{132256F0-5387-4B11-B7D7-8BD5297C4C6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{132256F0-5387-4B11-B7D7-8BD5297C4C6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{132256F0-5387-4B11-B7D7-8BD5297C4C6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{132256F0-5387-4B11-B7D7-8BD5297C4C6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F3C4B67-12DD-4C92-9F4A-5CFDA47093BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F3C4B67-12DD-4C92-9F4A-5CFDA47093BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F3C4B67-12DD-4C92-9F4A-5CFDA47093BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F3C4B67-12DD-4C92-9F4A-5CFDA47093BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E0E2116-CB82-4615-A344-9E0951ACFF3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E0E2116-CB82-4615-A344-9E0951ACFF3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E0E2116-CB82-4615-A344-9E0951ACFF3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E0E2116-CB82-4615-A344-9E0951ACFF3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7557B2CB-38A1-4FA2-9F1B-C54FAF82890A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7557B2CB-38A1-4FA2-9F1B-C54FAF82890A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7557B2CB-38A1-4FA2-9F1B-C54FAF82890A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7557B2CB-38A1-4FA2-9F1B-C54FAF82890A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C5CCFA5-4EEE-490E-B0DD-6B27C4CB87C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C5CCFA5-4EEE-490E-B0DD-6B27C4CB87C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C5CCFA5-4EEE-490E-B0DD-6B27C4CB87C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C5CCFA5-4EEE-490E-B0DD-6B27C4CB87C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{193E42F4-7280-4EDD-B180-BD2802E73727}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{193E42F4-7280-4EDD-B180-BD2802E73727}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{193E42F4-7280-4EDD-B180-BD2802E73727}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{193E42F4-7280-4EDD-B180-BD2802E73727}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF7972FE-C8EB-4AB1-82B0-9D6250E94D09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF7972FE-C8EB-4AB1-82B0-9D6250E94D09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF7972FE-C8EB-4AB1-82B0-9D6250E94D09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF7972FE-C8EB-4AB1-82B0-9D6250E94D09}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3FA73CC-5B17-4969-9585-5A4D64725179}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3FA73CC-5B17-4969-9585-5A4D64725179}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3FA73CC-5B17-4969-9585-5A4D64725179}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3FA73CC-5B17-4969-9585-5A4D64725179}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {71F0A9DF-E60E-4302-8A8B-0EAFCF5DA96D}
+	EndGlobalSection
+EndGlobal

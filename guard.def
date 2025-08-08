@@ -1,0 +1,3 @@
+LIBRARY guard.dll
+EXPORTS
+    DecryptString

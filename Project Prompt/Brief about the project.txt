@@ -1,0 +1,56 @@
+Here is a brief information about the sulotion:
+
+okay copliot so this is solution is typically an application that helps users to incease their sales and their target easily on social media by doing automated social marketing for them easier.. sharing facebook posts - replying to comments - sending messages on Messenger / Whatsapp / Telegram / more..
+
+our main purpose of this app is styling it more that coding it and giving it fancy and organized look
+
+
+Inside of the Sulotion if you readed projects name you will understand the purpose of each project just by reading what comes after the Dot mark Ex:
+FacebookManager.Core
+FacebookManager.Data
+FacebookManager.Services
+FacebookManager.Tests
+FacebookManager.UI
+FacebookManager.Utils
+
+
+
+Project Details
+1. MarketingApp.UI (WPF Application)
+•	Contains: MainWindow.xaml, user controls, styles, templates, and ViewModels.
+•	References: Core, Services, Data, Utils.
+•	Implements: MVVM pattern, data binding, commands, resources, styles, control templates, user controls.
+2. MarketingApp.Core
+•	Contains: Business models (Message, Post, Comment, UserAccount, etc.), interfaces, enums, core logic.
+•	No dependencies on UI or external services.
+3. MarketingApp.Services
+•	Contains: Service classes for Facebook/Messenger API, AI chat integration, etc.
+•	Implements: Interfaces from Core.
+•	Handles: API calls, serialization/deserialization, external communication.
+4. MarketingApp.Data
+•	Contains: Data access logic (e.g., Entity Framework DbContext, repositories, local storage).
+•	Handles: CRUD operations, data caching, local/remote DB.
+5. MarketingApp.Utils (Optional)
+•	Contains: Utility classes, converters, extension methods, common helpers.
+6. MarketingApp.Tests
+•	Contains: Unit tests for Core, Services, Data, and ViewModels.
+•	Uses: Test frameworks like MSTest, NUnit, or xUnit.
+---
+Architectural Pattern
+•	MVVM: Strict separation of View, ViewModel, and Model.
+•	Dependency Injection: Use a DI container (e.g., Microsoft.Extensions.DependencyInjection) for managing dependencies, especially for services and ViewModels.
+
+
+
+
+MarketingApp.sln
+│
+├── MarketingApp.UI         // WPF Application (Views, XAML, ViewModels)
+├── MarketingApp.Core       // Business logic, Models, Interfaces, Enums
+├── MarketingApp.Services   // Facebook/Messenger API integration, external services
+├── MarketingApp.Data       // Data access (local DB, repositories)
+├── MarketingApp.Utils      // Helpers, converters, extension methods (optional)
+└── MarketingApp.Tests      // Unit and integration tests
+
+
+

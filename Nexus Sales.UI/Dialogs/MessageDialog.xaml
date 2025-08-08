@@ -1,0 +1,140 @@
+﻿<!--
+    MessageDialog.xaml: Custom styled dialog box for notifications.
+
+    Window Properties:
+    - WindowStyle="None": Removes default window chrome.
+    - AllowsTransparency="True": Allows transparent background for custom shapes.
+    - Background="Transparent": Makes the window background transparent.
+    - ResizeMode="NoResize": Prevents resizing.
+    - SizeToContent="WidthAndHeight": Adjusts window size based on its content.
+    - WindowStartupLocation="CenterScreen": Centers the dialog on the screen.
+    - MaxHeight="400" MaxWidth="500": Sets maximum dimensions to prevent overly large dialogs.
+
+    DialogRootBorder:
+    - x:Name="DialogRootBorder": Important for applying animations from code-behind.
+    - Background="{DynamicResource LoginBackgroundBrush}": Uses the theme's background.
+    - BorderBrush="{DynamicResource AccentBrush}": Uses the theme's accent color for the border.
+    - BorderThickness="2": Sets border thickness.
+    - CornerRadius="15": Applies rounded corners to the dialog.
+    - Effect="{StaticResource DropShadowEffect}": Adds an optional subtle shadow (resource defined in DarkMode.xaml).
+
+    Grid Structure:
+    - Grid.RowDefinitions: Defines rows for title, message content, and the OK button.
+
+    TitleTextBlock:
+    - Displays the dialog title. Default color: FontAlert.
+
+    MessageTextBlock:
+    - Displays the main message content, with text wrapping. Default color: FontNormal.
+
+    OkButton:
+    - Standard OK button with styling and hover animations. Default color: FontNormal.
+    - CornerRadius="5": Slightly rounded button corners.
+    - Style.Triggers: Implements zoom effect on mouse over/leave.
+-->
+<Window x:Class="NexusSales.UI.Dialogs.MessageDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Message"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterScreen"
+        MaxHeight="400" MaxWidth="500">
+
+    <Border x:Name="DialogRootBorder"
+            Background="{DynamicResource AcrylicBackgroundBrush}" 
+            BorderBrush="{DynamicResource AccentBrush}"
+            BorderThickness="2"
+            CornerRadius="15">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="TitleTextBlock"
+                       Grid.Row="0"
+                       Text="Notification"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource FontAlertBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,10"/>
+
+            <TextBlock x:Name="MessageTextBlock"
+                       Grid.Row="1"
+                       Text="This is a sample message."
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource FontNormalBrush}" 
+                       FontSize="14"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Margin="0,0,0,20"/>
+
+            <Button x:Name="OkButton"
+                    Grid.Row="2"
+                    Content="OK"
+                    Width="100"
+                    Height="35"
+                    HorizontalAlignment="Center"
+                    Background="{DynamicResource AccentBrush}"
+                    Foreground="{DynamicResource FontNormalBrush}" 
+                    FontSize="14"
+                    FontWeight="SemiBold"
+                    Cursor="Hand"
+                    Click="OkButton_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                        <Setter Property="RenderTransform">
+                            <Setter.Value>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)"
+                                                             To="1.05" Duration="0:0:0.15"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)"
+                                                             To="1.05" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleX)"
+                                                             To="1" Duration="0:0:0.15"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="(Button.RenderTransform).(ScaleTransform.ScaleY)"
+                                                             To="1" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+    </Border>
+</Window>

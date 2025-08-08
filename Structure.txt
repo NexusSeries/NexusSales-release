@@ -1,0 +1,197 @@
+﻿Nexus Sales.sln
+│
+├── Nexus Sales.UI         // WPF Application (Views, XAML, ViewModels)
+├── Nexus Sales.Core       // Business logic, Models, Interfaces, Enums
+├── Nexus Sales.Services   // Facebook/Messenger API integration, external services
+├── Nexus Sales.Data       // Data access (local DB, repositories)
+├── Nexus Sales.Utils      // Helpers, converters, extension methods (optional)
+└── Nexus Sales.Tests      // Unit and integration tests
+
+
+
+1. Solution Structure & Layered Architecture
+•	Nexus Sales.UI: WPF GUI, MVVM, all user interaction, themed with custom dark mode, uses dependency injection (Microsoft.Extensions.DependencyInjection).
+•	Nexus Sales.Services: Business logic, orchestrates workflows, depends on Data and Core.
+•	Nexus Sales.Data: Data access, all DB logic, parameterized queries, uses PostgreSQL, depends on Core.
+•	Nexus Sales.Core: Shared models, interfaces, DTOs.
+•	Nexus Sales.Utils: General-purpose helpers.
+•	Nexus Sales.Tests: Unit/integration tests.
+UI → Services → Data → Database is the enforced flow.
+---
+2. Security & Sensitive Data Handling
+•	Sensitive strings (e.g., DB connection, tokens) must be encrypted.
+•	User-specific: AES-256 with PBKDF2 (password-derived key, in-memory only).
+•	App-wide: DPAPI (machine/user-bound, no manual key management).
+•	Never store sensitive data in plain text.
+•	Future NexusGuard integration: All security/IPC must be interface-driven for easy swap to NexusGuard-provided secrets.
+•	No anti-tamper, VM detection, or anti-debug in Nexus Sales (reserved for NexusGuard).
+---
+3. Error Handling & Logging
+•	Extensive try/catch on all IO, network, crypto, and DB code.
+•	Structured logging: Timestamp, method, error code, context, stack trace.
+•	Debug/production logging modes.
+•	Fail-fast: On critical error, show user-friendly dialog and terminate.
+---
+4. Database Schema & Data Sync
+•	users table: All user data, including email (unique), settings_json (for flexible per-user settings), and updated_at (for sync).
+•	Bookmarks: To be stored in a new notification_bookmarks table, linked by user_email (FK to users.email), for cross-device sync.
+•	All DB access: Parameterized queries only.
+---
+5. UI/UX & Animations
+•	All new UI: Must use custom dark theme, creative, animated, and visually appealing (glassmorphism, neon, gradients, etc.).
+•	Highlighting and navigation: To be Gemini/command-driven in the future, with services for UI highlighting and navigation.
+---
+6. Bookmarks Feature Plan (from To Do.md)
+•	DB Table: notification_bookmarks (id, user_email, notification_id, created_at, unique constraint).
+•	Data Layer: Methods for add, remove, get bookmarks by user email.
+•	UI: Animated, creative Bookmark window/UserControl, with empty state illustration, animated add/remove, and "Unpin" feature.
+•	NotificationPanel: "Pin" button on each notification, animated, calls data layer, disables if already pinned.
+•	MainWindow: Button to open Bookmark window.
+•	Cross-device: Bookmarks loaded by user email on login.
+•	All methods and UI elements: Clearly named, maintainable, and themed.
+---
+7. Updater (NexusUpdate)
+•	Standalone C# console app for updates.
+•	Manifest-driven: Downloads update_manifest.json from GitHub, compares versions, downloads/validates files (SHA256), replaces as needed.
+•	Robust error handling/logging.
+•	No direct dependency on NexusSales.UI.
+---
+8. Common Mistakes.md
+•	Must be maintained with every error, correction, or security lesson.
+
+
+Acknowledged. Here’s a detailed, step-by-step plan for creating and integrating a `FacebookPage` inside the `NexusSales.FrontEnd.Pages` DLL, ensuring it is dynamically loaded by the main app for hot-swapping/updating without touching the main executable.
+
+---
+
+## 1. Project Setup: NexusSales.FrontEnd.Pages
+
+- **Goal:** All feature pages (like FacebookPage) live in this DLL.
+- **Update Process:** You can replace this DLL independently for feature/UI updates.
+
+---
+
+## 2. Create FacebookPage in the DLL
+
+- **File:** `FacebookPage.xaml` and `FacebookPage.xaml.cs` inside `NexusSales.FrontEnd.Pages`.
+- **Type:** `UserControl` (WPF).
+- **Theming:** Reference `DarkMode.xaml` from the main app (see below for resource sharing).
+
+---
+
+## 3. Expose FacebookPage for Dynamic Loading
+
+- **Namespace:** Use a clear namespace, e.g., `NexusSales.FrontEnd.Pages`.
+- **Public Class:** Ensure `FacebookPage` is public.
+- **No App.xaml:** The DLL should not have its own `App.xaml`.
+
+---
+
+## 4. Reference the DLL in Main App
+
+- **Reference:** Add a reference to `NexusSales.FrontEnd.Pages.dll` in `NexusSales.UI`.
+- **Copy Local:** Ensure the DLL is copied to the output directory.
+
+---
+
+## 5. Dynamic Page Loading in MainWindow
+
+- **Navigation:** When the user navigates to "Facebook", use reflection or a factory to instantiate `NexusSales.FrontEnd.Pages.FacebookPage` from the DLL.
+- **ContentControl:** Set the `Content` of your main frame or host control to the new instance.
+
+---
+
+## 6. Theming & Resource Sharing
+
+- **ResourceDictionary:** In `FacebookPage.xaml`, merge the main app’s `DarkMode.xaml` at runtime (from the main app’s resources).
+- **Custom Controls:** Reference shared controls via project references or move them to a shared DLL if needed.
+
+---
+
+## 7. ViewModel (Optional, for MVVM)
+
+- **ViewModel Location:** Place `FacebookPageViewModel` in the DLL or in a shared project if it’s reused.
+- **DataContext:** Set the ViewModel in code-behind or via DI if you have a ViewModel locator.
+
+---
+
+## 8. Hot-Swapping/Update
+
+- **Update:** To update FacebookPage, just replace the DLL and restart the app (or implement hot-reload logic).
+
+---
+
+### Example: FacebookPage.xaml (in DLL)
+
+```xml
+<UserControl x:Class="NexusSales.FrontEnd.Pages.FacebookPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource BackgroundBrush}">
+    <Grid>
+        <TextBlock Text="Facebook Page"
+                   Foreground="{DynamicResource FontNormalBrush}"
+                   FontSize="32"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"/>
+    </Grid>
+</UserControl>
+```
+
+---
+
+### Example: FacebookPage.xaml.cs (in DLL)
+
+```csharp
+using System.Windows.Controls;
+
+namespace NexusSales.FrontEnd.Pages
+{
+    public partial class FacebookPage : UserControl
+    {
+        public FacebookPage()
+        {
+            InitializeComponent();
+        }
+    }
+}
+```
+
+---
+
+### Example: Dynamic Loading in MainWindow (UI Project)
+
+```csharp
+// Load FacebookPage from DLL dynamically
+var assembly = Assembly.LoadFrom("NexusSales.FrontEnd.Pages.dll");
+var type = assembly.GetType("NexusSales.FrontEnd.Pages.FacebookPage");
+var page = (UserControl)Activator.CreateInstance(type);
+MainContentControl.Content = page; // MainContentControl is your ContentControl host
+```
+
+---
+
+### Example: Merging DarkMode.xaml at Runtime (in FacebookPage.xaml.cs)
+
+```csharp
+// In FacebookPage.xaml.cs constructor
+var darkMode = Application.Current.Resources.MergedDictionaries
+    .FirstOrDefault(rd => rd.Source != null && rd.Source.OriginalString.Contains("DarkMode.xaml"));
+if (darkMode != null)
+    Resources.MergedDictionaries.Add(darkMode);
+```
+
+---
+
+## To Do.md Summary
+
+1. Create `FacebookPage.xaml` and `.cs` in `NexusSales.FrontEnd.Pages` DLL.
+2. Ensure all theming/resources are loaded from the main app.
+3. Reference the DLL in `NexusSales.UI`.
+4. Implement dynamic loading of `FacebookPage` in MainWindow.
+5. Add navigation logic/button to trigger loading.
+6. To update, just replace the DLL.
+
+---
+
+Let me know if you want the full code for any step or further details on resource sharing or dynamic loading!
