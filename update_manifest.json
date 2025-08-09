@@ -11,8 +11,8 @@
     },
     {
       "Path": "dependencies.zip",
-      "Hash": "bb83a9a54db0d03aae60871c5eabfd0336d9e0c0fbb8d8fb738338742d56e6d6",
-      "Size": 31300000,
+      "Hash": "e3c8e56950f043947ad5bb3b7402dde72d8aa344f6170f550e64bcb2380bceb7",
+      "Size": 30400000,
       "DownloadUrl": "https://github.com/NexusSeries/NexusSales-release/releases/download/v1.1/dependencies.zip",
       "Description": "All required dependencies in a single archive."
     }
