@@ -33,7 +33,7 @@ namespace NexusUpdate
     {
         static async Task Main(string[] args)
         {
-            string connectionString = "YourConnectionStringHere"; // Replace with your actual connection string
+            string connectionString = ConfigurationManager.ConnectionStrings["NexusSalesConnection"].ConnectionString; // Replace with your actual connection string
             string updateManifestUrl = ConfigurationManager.AppSettings["UpdateManifestUrl"];
 
             // 1. Check update deadline from DB

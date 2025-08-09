@@ -40,6 +40,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Problems", "Problems", "{0C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusUpdate", "NexusUpdate\NexusUpdate.csproj", "{D3FA73CC-5B17-4969-9585-5A4D64725179}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "releases", "releases", "{F74F50B4-B789-48AB-BADA-5233B296D766}"
+	ProjectSection(SolutionItems) = preProject
+		update_manifest.json = update_manifest.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

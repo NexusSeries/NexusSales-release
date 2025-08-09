@@ -12,7 +12,7 @@
         Background="Transparent"
         WindowStyle="None"
         AllowsTransparency="True"
-        Title="MainWindow" Height="800" Width="1280">
+        Title="Nexus Sales" Height="800" Width="1280">
     
     <!-- Add the scrollbar style to Window.Resources -->
     <Window.Resources>
