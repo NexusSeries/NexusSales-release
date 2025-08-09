@@ -8,7 +8,13 @@
       "Size": 3720244,
       "DownloadUrl": "https://github.com/NexusSeries/NexusSales-release/releases/download/v1.1/NexusSales.UI.exe",
       "Description": "Main application executable."
+    },
+    {
+      "Path": "dependencies.zip",
+      "Hash": "bb83a9a54db0d03aae60871c5eabfd0336d9e0c0fbb8d8fb738338742d56e6d6",
+      "Size": 31300000,
+      "DownloadUrl": "https://github.com/NexusSeries/NexusSales-release/releases/download/v1.1/dependencies.zip",
+      "Description": "All required dependencies in a single archive."
     }
-    // Add other files as needed
   ]
 }
