@@ -1,0 +1,14 @@
+{
+  "LatestVersion": "1.1.0",
+  "ReleaseNotesUrl": "https://github.com/NexusSeries/NexusSales-release/releases/tag/v1.1",
+  "Files": [
+    {
+      "Path": "NexusSales.UI.exe",
+      "Hash": "66fb8489c96b226a6790025bae671836c7f52fbc287503e6701062bd311b36c0",
+      "Size": 3720244,
+      "DownloadUrl": "https://github.com/NexusSeries/NexusSales-release/releases/download/v1.1/NexusSales.UI.exe",
+      "Description": "Main application executable."
+    }
+    // Add other files as needed
+  ]
+}
