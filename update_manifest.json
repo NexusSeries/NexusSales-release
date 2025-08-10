@@ -4,15 +4,15 @@
   "Files": [
     {
       "Path": "NexusSales.UI.exe",
-      "Hash": "17b3afb9e7be0a43a2b896e60bf46e26187f5bb8c84127d9de6df8356005bcfa",
-      "Size": 3550000,
+      "Hash": "856835207abcb97c1b57b8c14a9f88d500a13ef1889a9ff22d7725c81eed6fc8",
+      "Size": 53400000,
       "DownloadUrl": "https://github.com/NexusSeries/NexusSales-release/releases/download/v1.1/NexusSales.UI.exe",
       "Description": "Main application executable."
     },
     {
       "Path": "dependencies.zip",
-      "Hash": "7473a1b8f209133ec6aa1208330635c254e294f8b2e1145cb387836da85dd0f3",
-      "Size": 30400000,
+      "Hash": "f7564bc3bd67246ce59c3801b3f16a838406993c9562e9367534c9d550e3e3da",
+      "Size": 3690000,
       "DownloadUrl": "https://github.com/NexusSeries/NexusSales-release/releases/download/v1.1/dependencies.zip",
       "Description": "All required dependencies in a single archive."
     }
