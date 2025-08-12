@@ -1,0 +1,119 @@
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Text.Json; // For JSON parsing
+
+public class FacebookCommentReader
+{
+    public static async Task Main(string[] args)
+    {
+        Console.WriteLine("Facebook Comment Reader");
+
+        // --- INPUTS ---
+        Console.Write("Enter the Facebook Post ID (e.g., PageID_PostID): ");
+        string postId = Console.ReadLine();
+
+        Console.Write("Enter your Facebook Page Access Token: ");
+        string accessToken = Console.ReadLine();
+        // --- END INPUTS ---
+
+        // Basic input validation
+        if (string.IsNullOrWhiteSpace(postId) || string.IsNullOrWhiteSpace(accessToken))
+        {
+            Console.WriteLine("Error: Post ID and Access Token cannot be empty.");
+            return;
+        }
+
+        await GetPostComments(postId, accessToken);
+
+        Console.WriteLine("\nPress any key to exit.");
+        Console.ReadKey();
+    }
+
+    public static async Task GetPostComments(string postId, string accessToken)
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            try
+            {
+                // Construct the URL for the Graph API endpoint to get comments
+                // We're requesting fields: id (comment ID), from (who posted), message (comment text)
+                // Using API version v19.0.
+                string url = $"https://graph.facebook.com/v19.0/{postId}/comments?fields=id,from,message&access_token={accessToken}";
+
+                Console.WriteLine($"\nAttempting to retrieve comments for Post ID: {postId}...");
+
+                // Send the GET request
+                HttpResponseMessage response = await client.GetAsync(url);
+
+                // Read the response content
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                // Check if the request was successful
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Successfully retrieved comments.");
+                    Console.WriteLine("Facebook API Response:");
+
+                    // Parse the JSON response
+                    using (JsonDocument doc = JsonDocument.Parse(responseBody))
+                    {
+                        JsonElement root = doc.RootElement;
+
+                        if (root.TryGetProperty("data", out JsonElement dataElement) && dataElement.ValueKind == JsonValueKind.Array)
+                        {
+                            if (dataElement.GetArrayLength() == 0)
+                            {
+                                Console.WriteLine("  No comments found for this post.");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"  Total Comments: {dataElement.GetArrayLength()}");
+                                Console.WriteLine("  Comments:");
+                                foreach (JsonElement comment in dataElement.EnumerateArray())
+                                {
+                                    string commentId = comment.GetProperty("id").GetString();
+                                    string message = comment.GetProperty("message").GetString();
+                                    string fromName = comment.GetProperty("from").GetProperty("name").GetString();
+
+                                    Console.WriteLine($"    --------------------");
+                                    Console.WriteLine($"    Comment ID: {commentId}");
+                                    Console.WriteLine($"    From: {fromName}");
+                                    Console.WriteLine($"    Message: {message}");
+                                }
+                                Console.WriteLine($"    --------------------");
+
+                                // Handle pagination if there are more comments than returned in one request
+                                if (root.TryGetProperty("paging", out JsonElement pagingElement) &&
+                                    pagingElement.TryGetProperty("next", out JsonElement nextLinkElement))
+                                {
+                                    Console.WriteLine("\n  Note: More comments might exist. This script only fetches the first page of results.");
+                                    Console.WriteLine($"  Next Page Link: {nextLinkElement.GetString()}");
+                                    // For a complete solution, you would implement a loop to follow the 'next' link.
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"  Unexpected response structure: {responseBody}");
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Error: HTTP Status Code {response.StatusCode}");
+                    Console.WriteLine("Facebook API Error Response:");
+                    Console.WriteLine(responseBody); // This will contain the error details from Facebook
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($"Network or HTTP request error: {e.Message}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An unexpected error occurred: {e.Message}");
+            }
+        }
+    }
+}
