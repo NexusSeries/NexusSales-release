@@ -1,0 +1,168 @@
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+class Program
+{
+    static readonly string[] Patterns =
+    {
+        @"/permalink/(\d+)",
+        @"/videos/(\d+)",
+        @"fbid=(\d+)",
+        @"/(?:(?:posts)|(?:photos))/(\d+)",
+        @"""post_id"":""(\d+)""",
+        @"""video_id"":""(\d+)""",
+        @"""id"":""(\d{8,})"""
+    };
+
+    static async Task Main()
+    {
+        string[] urls =
+        {
+            "https://www.facebook.com/share/p/1FJc91gtAD/",
+            "https://www.facebook.com/mohamedelyounssyy/videos/692610903941133/",
+            "https://www.facebook.com/groups/789588848326069/permalink/1771448250140119/",
+            "https://www.facebook.com/share/p/1hy4mVxdT2/",
+            "https://www.facebook.com/share/v/16nYo155Mf/",
+            "https://www.facebook.com/share/p/15ojbeGwXB/",
+            "https://www.facebook.com/share/p/1CxKwrEMA1/",
+            "https://www.facebook.com/share/p/1EMM7KSSXS/"
+        };
+
+        // Facebook cookies for old method
+        string c_user_token = "100039485718704";
+        string xs_token = "49%3A3CFKZ0sPZf6iCg%3A2%3A1753126740%3A-1%3A-1%3ApQ7Km7CYzFV9Eg%3AAcUqFbNr5dH9ruPNQmfV9zt89abO_LadnOQTnNZSU8k";
+
+        var handler = new HttpClientHandler
+        {
+            AllowAutoRedirect = true,
+            CookieContainer = new CookieContainer(),
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        };
+
+        using var client = new HttpClient(handler);
+        client.DefaultRequestHeaders.Add("User-Agent",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+            "AppleWebKit/537.36 (KHTML, like Gecko) " +
+            "Chrome/114.0.0.0 Safari/537.36");
+
+        foreach (var url in urls)
+        {
+            Console.WriteLine($"Processing: {url}");
+
+            var (finalUrl, postId) = await ExtractPostId_New(client, url);
+
+            if (string.IsNullOrEmpty(postId))
+            {
+                // Trigger old method if new method fails
+                postId = await ExtractPostId_Old(url, c_user_token, xs_token);
+            }
+
+            if (!string.IsNullOrEmpty(postId))
+            {
+                Console.WriteLine($"Final URL: {finalUrl}");
+                Console.WriteLine($"Post ID: {postId}");
+            }
+            else
+            {
+                Console.WriteLine($"Final URL: {finalUrl}");
+                Console.WriteLine("Post ID not found.");
+            }
+            Console.WriteLine(new string('-', 50));
+        }
+    }
+
+    static async Task<(string finalUrl, string? postId)> ExtractPostId_New(HttpClient client, string url)
+    {
+        try
+        {
+            var response = await client.GetAsync(url);
+            var finalUrl = response.RequestMessage?.RequestUri?.ToString() ?? url;
+            var html = await response.Content.ReadAsStringAsync();
+
+            // Try from final URL
+            foreach (var pattern in Patterns)
+            {
+                var match = Regex.Match(finalUrl, pattern);
+                if (match.Success)
+                    return (finalUrl, match.Groups[1].Value);
+            }
+
+            // Try from HTML
+            foreach (var pattern in Patterns)
+            {
+                var match = Regex.Match(html, pattern);
+                if (match.Success)
+                    return (finalUrl, match.Groups[1].Value);
+            }
+
+            return (finalUrl, null);
+        }
+        catch
+        {
+            return (url, null);
+        }
+    }
+
+    static async Task<string> ExtractPostId_Old(string url, string cUserCookie, string xsCookie)
+    {
+        try
+        {
+            // Switch to mbasic to get static HTML
+            string mobileUrl = url.Replace("www.facebook.com", "mbasic.facebook.com");
+
+            var cookieContainer = new CookieContainer();
+            cookieContainer.Add(new Cookie("c_user", cUserCookie, "/", ".facebook.com"));
+            cookieContainer.Add(new Cookie("xs", xsCookie, "/", ".facebook.com"));
+
+            using var handler = new HttpClientHandler
+            {
+                CookieContainer = cookieContainer,
+                AllowAutoRedirect = true
+            };
+            using var client = new HttpClient(handler);
+            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+
+            var response = await client.GetAsync(mobileUrl);
+            string finalUrl = response.RequestMessage.RequestUri.AbsoluteUri;
+            string html = await response.Content.ReadAsStringAsync();
+
+            // Try from URL
+            var match = Regex.Match(finalUrl, @"(?:fbid|story_fbid|video_id)=([0-9]+)");
+            if (match.Success) return match.Groups[1].Value;
+
+            match = Regex.Match(finalUrl, @"\/(?:permalink|posts|videos)\/([0-9]+)");
+            if (match.Success) return match.Groups[1].Value;
+
+            // Try from HTML
+            return ExtractIdFromHtml(html);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    static string ExtractIdFromHtml(string html)
+    {
+        string[] htmlPatterns =
+        {
+            @"story_fbid=(\d+)",
+            @"fbid=(\d+)",
+            @"video_id=(\d+)",
+            @"<meta[^>]+content=\""fb:\/\/\w+\/\?id=(\d+)\""",
+            @"<meta[^>]+property=\""(?:og:url|al:android:url)\""[^>]+content=\""(?:https:\/\/www\.facebook\.com\/(?:.+?)\/(?:posts|videos)\/)(\d+)\"""
+        };
+
+        foreach (var pattern in htmlPatterns)
+        {
+            var match = Regex.Match(html, pattern, RegexOptions.IgnoreCase);
+            if (match.Success)
+                return match.Groups[1].Value;
+        }
+
+        return null;
+    }
+}
