@@ -1,0 +1,486 @@
+<UserControl x:Class="NexusSales.FrontEnd.Pages.UserControls.ExtractDataView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:NexusSales.FrontEnd.Pages.UserControls"
+             Background="Transparent">
+    <UserControl.Resources>
+
+        <!-- Modern DropShadowEffect -->
+        <DropShadowEffect x:Key="ModernDropShadow" BlurRadius="24" ShadowDepth="0" Opacity="0.28" Color="#222"/>
+
+        <!-- Row Hover Animation -->
+        <Style x:Key="AnimatedDataGridRowStyle" TargetType="DataGridRow">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="0" ShadowDepth="0" Opacity="0"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="MouseEnter">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <ColorAnimation Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                            To="#eaf6fb" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="MouseLeave">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <ColorAnimation Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                            To="Transparent" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#eaf6fb"/>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect BlurRadius="8" ShadowDepth="0" Opacity="0.12"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#d1eaff"/>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="0" Opacity="0.18"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Cell Style with Custom Colors -->
+        <Style x:Key="AnimatedCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#2d3a4a"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border x:Name="cellBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="cellContent"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left"
+                                              RecognizesAccessKey="True"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Hover -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="cellBorder" Property="Background" Value="#f5f9f9"/>
+                            </Trigger>
+                            <!-- Focused (keyboard navigation or active) -->
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="cellBorder" Property="Background" Value="#e3eff6"/>
+                            </Trigger>
+                            <!-- Selected CELL only -->
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="cellBorder" Property="Background" Value="#e3eff6"/>
+                                <Setter TargetName="cellBorder" Property="BorderBrush" Value="#4c575d"/>
+                                <Setter TargetName="cellBorder" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                            <!-- Mouse click animation -->
+                            <EventTrigger RoutedEvent="PreviewMouseLeftButtonDown">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="cellBorder"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         From="1" To="0.7" Duration="0:0:0.08" AutoReverse="True"/>
+                                        <ColorAnimation Storyboard.TargetName="cellBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        To="#e3eff6" Duration="0:0:0.12" AutoReverse="True"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Row Number Cell Style -->
+        <Style x:Key="RowNumberCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource AnimatedCellStyle}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#2d3a4a"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border x:Name="cellBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="cellContent"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left"
+                                              RecognizesAccessKey="True"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Focused (keyboard navigation or active) -->
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="cellBorder" Property="Background" Value="#abcad9"/>
+                                <Setter TargetName="cellBorder" Property="BorderBrush" Value="#4c575d"/>
+                                <Setter TargetName="cellBorder" Property="BorderThickness" Value="2"/>
+                                <Setter TargetName="cellContent" Property="TextElement.Foreground" Value="#2d3a4a"/>
+                            </Trigger>
+                            <!-- Mouse click animation -->
+                            <EventTrigger RoutedEvent="PreviewMouseLeftButtonDown">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="cellBorder"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         From="1" To="0.7" Duration="0:0:0.08" AutoReverse="True"/>
+                                        <ColorAnimation Storyboard.TargetName="cellBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        To="#abcad9" Duration="0:0:0.12" AutoReverse="True"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Header Style -->
+        <Style x:Key="AnimatedHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#f5f8fa"/>
+            <Setter Property="Foreground" Value="#2d3a4a"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="16,6"/> <!-- Increased padding for easier resizing -->
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="BorderBrush" Value="#e0e6ed"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Grid>
+                            <Border x:Name="headerBorder"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="8,8,0,0">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <ContentPresenter/>
+                                    <Button x:Name="FilterButton"
+                                            Width="18" Height="18"
+                                            Margin="6,0,0,0"
+                                            ToolTip="Filter by"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Click="FilterButton_Click">
+                                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71c;" FontSize="14" Foreground="#8AA4C8"/>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                            <!-- This Thumb enables column resizing -->
+                            <Thumb x:Name="PART_HeaderGripper"
+                                   Width="12"
+                                   HorizontalAlignment="Right"
+                                   Margin="0,0,-4,0"
+                                   Cursor="SizeWE"
+                                   Background="Transparent"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="headerBorder" Property="Background" Value="#eaf6fb"/>
+                                <Setter TargetName="headerBorder" Property="BorderBrush" Value="#b3e0ff"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Animated ContextMenu Style (smaller size) -->
+        <Style x:Key="ModernContextMenuStyle" TargetType="ContextMenu">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border x:Name="Border"
+                                Background="#F8FAFC"
+                                CornerRadius="12"
+                                Padding="8"
+                                MinWidth="150"
+                                BorderBrush="#D0D7E2"
+                                BorderThickness="1"
+                                Opacity="0"
+                                Effect="{StaticResource ModernDropShadow}">
+                            <StackPanel IsItemsHost="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <EventTrigger RoutedEvent="ContextMenu.Opened">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Border"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         From="0" To="1" Duration="0:0:0.18"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern MenuItem Style (smaller size, visible submenu background) -->
+        <Style x:Key="ModernMenuItemStyle" TargetType="MenuItem">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#2d3a4a"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
+            <Setter Property="MinHeight" Value="24"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border ClipToBounds="True">
+                            <Grid>
+                                <Grid.RenderTransform>
+                                    <ScaleTransform x:Name="scale" ScaleX="1" ScaleY="1"/>
+                                </Grid.RenderTransform>
+                                <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" CornerRadius="6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="20"/>
+                                        </Grid.ColumnDefinitions>
+                                        <!-- Icon (if any) -->
+                                        <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,6,0"/>
+                                        <!-- Header -->
+                                        <ContentPresenter Grid.Column="1"
+                                                          ContentSource="Header"
+                                                          RecognizesAccessKey="True"
+                                                          VerticalAlignment="Center"
+                                                          HorizontalAlignment="Left"
+                                                          Margin="0,0,0,0"
+                                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                        <!-- Submenu Arrow -->
+                                        <TextBlock Grid.Column="2"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   Text="&#xE76C;"
+                                                   FontSize="12"
+                                                   Foreground="#8AA4C8"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Right"
+                                                   Visibility="Collapsed"
+                                                   x:Name="SubmenuArrow"/>
+                                    </Grid>
+                                </Border>
+                                <!-- Submenu Popup with visible background -->
+                                <Popup x:Name="PART_Popup"
+                                       Placement="Right"
+                                       PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                       IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                       AllowsTransparency="True"
+                                       Focusable="False"
+                                       PopupAnimation="Fade"
+                                       Margin="2,0,0,0">
+                                    <Border SnapsToDevicePixels="True"
+                                            Background="#F8FAFC"
+                                            CornerRadius="8"
+                                            MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=MenuItem}}"
+                                            BorderBrush="#D0D7E2"
+                                            BorderThickness="1">
+                                        <StackPanel IsItemsHost="True"
+                                                    KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Animate scale on highlight -->
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="scale"
+                                                             Storyboard.TargetProperty="ScaleX"
+                                                             To="1.08" Duration="0:0:0.13" />
+                                            <DoubleAnimation Storyboard.TargetName="scale"
+                                                             Storyboard.TargetProperty="ScaleY"
+                                                             To="1.08" Duration="0:0:0.13" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="scale"
+                                                             Storyboard.TargetProperty="ScaleX"
+                                                             To="1" Duration="0:0:0.13" />
+                                            <DoubleAnimation Storyboard.TargetName="scale"
+                                                             Storyboard.TargetProperty="ScaleY"
+                                                             To="1" Duration="0:0:0.13" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#eaf6fb"/>
+                                <Setter Property="Foreground" Value="#0078d4"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#B0B0B0"/>
+                            </Trigger>
+                            <!-- Show arrow only if there are subitems -->
+                            <Trigger Property="HasItems" Value="True">
+                                <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Separator Style (thicker and more visible) -->
+        <Style TargetType="Separator" x:Key="ModernSeparatorStyle">
+            <Setter Property="Margin" Value="0,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Border Height="2" Background="#e0e6ed" Margin="8,0" CornerRadius="1"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Rounded Button Style -->
+        <Style x:Key="RoundedButtonStyle" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="Transparent" Margin="24">
+        <Border Background="White" CornerRadius="16" Padding="18" BorderBrush="#e0e6ed" BorderThickness="1" >
+            <StackPanel>
+                <TextBlock Text="Requestee" FontSize="22" FontWeight="Bold" Foreground="#2d3a4a" Margin="0,0,0,12"/>
+                <Button Content="Reset Column Widths" Click="ResetColumnWidths_Click" Margin="0,0,0,10"/>
+                <Button Content="Extract Facebook Post ID"
+                        Margin="0,0,0,10"
+                        Padding="16,6"
+                        FontWeight="SemiBold"
+                        Background="#4267B2"
+                        Foreground="White"
+                        BorderBrush="#29487d"
+                        BorderThickness="1"
+                        Click="ExtractFacebookPostId_Click"
+                        Cursor="Hand"
+                        HorizontalAlignment="Left"
+                        Effect="{StaticResource ModernDropShadow}"/>
+                <Button Style="{StaticResource RoundedButtonStyle}" />
+                <DataGrid x:Name="AnimatedDataGrid"
+                          AutoGenerateColumns="True"
+                          HeadersVisibility="Column"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          CanUserResizeRows="True"
+                          CanUserReorderColumns="True"
+                          GridLinesVisibility="None"
+                          SelectionMode="Single"
+                          SelectionUnit="Cell"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          RowHeight="38"
+                          FontSize="15"
+                          FontFamily="Segoe UI"
+                          Margin="0,0,0,0"
+                          ItemsSource="{Binding RequesteeList, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#" Binding="{Binding RowNumber}" Width="40" CellStyle="{StaticResource RowNumberCellStyle}"/>
+                        <DataGridTextColumn Header="Craft" Binding="{Binding Craft}" Width="*"/>
+                        <DataGridTextColumn Header="First name" Binding="{Binding FirstName}" Width="*"/>
+                        <DataGridTextColumn Header="Last name" Binding="{Binding LastName}" Width="*"/>
+                        <DataGridTextColumn Header="Referred by" Binding="{Binding ReferredBy}" Width="*"/>
+                        <DataGridTextColumn Header="EE" Binding="{Binding EE}" Width="80"/>
+                        <DataGridTextColumn Header="Shift" Binding="{Binding Shift}" Width="90"/>
+                        <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="130"/>
+                        <DataGridTextColumn Header="Need by" Binding="{Binding NeedBy}" Width="100"/>
+                        <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="180"/>
+                    </DataGrid.Columns>
+                    <DataGrid.ContextMenu>
+                        <ContextMenu x:Name="TableContextMenu"
+                                     Style="{StaticResource ModernContextMenuStyle}"
+                                     Opened="TableContextMenu_Opened">
+                            <MenuItem Header="Insert column left" Click="InsertColumnLeft_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Insert column right" Click="InsertColumnRight_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <Separator Style="{StaticResource ModernSeparatorStyle}"/>
+                            <MenuItem Header="Clear column" Click="ClearColumn_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Read only" IsCheckable="True" Click="ReadOnlyColumn_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Alignment" Style="{StaticResource ModernMenuItemStyle}">
+                                <MenuItem Header="Left" Click="AlignLeft_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Center" Click="AlignCenter_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Right" Click="AlignRight_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Justify" Click="AlignJustify_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            </MenuItem>
+                            <MenuItem Header="Vertical Alignment" Style="{StaticResource ModernMenuItemStyle}">
+                                <MenuItem Header="Top" Click="AlignTop_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Middle" Click="AlignMiddle_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Bottom" Click="AlignBottom_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            </MenuItem>
+                            <Separator Style="{StaticResource ModernSeparatorStyle}"/>
+                            <MenuItem Header="Filter by condition" Style="{StaticResource ModernMenuItemStyle}">
+                                <MenuItem Header="Contains" Click="FilterContains_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Does not contain" Click="FilterNotContains_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Equals" Click="FilterEquals_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Not equals" Click="FilterNotEquals_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            </MenuItem>
+                            <MenuItem Header="Filter by value" Click="FilterByValue_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Clear filter" Click="ClearFilter_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <Separator Style="{StaticResource ModernSeparatorStyle}"/>
+                            <MenuItem Header="Hide column" Click="HideColumn_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Show all columns" Click="ShowAllColumns_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <Separator Style="{StaticResource ModernSeparatorStyle}"/>
+                            <MenuItem Header="Reset column width" Click="ResetColumnWidth_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Reset all column widths" Click="ResetColumnWidths_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <Separator Style="{StaticResource ModernSeparatorStyle}"/>
+                            <MenuItem Header="Export to Excel" Click="ExportToExcel_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Copy cell" Style="{StaticResource ModernMenuItemStyle}">
+                                <MenuItem.Icon>
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C8;" FontSize="18" Foreground="#8AA4C8"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Paste cell" Click="PasteCell_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
+                </DataGrid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
