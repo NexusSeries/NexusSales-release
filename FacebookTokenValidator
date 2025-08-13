@@ -1,0 +1,33 @@
+using System.Collections.Generic;
+
+namespace NexusSales.Core.Commanding.Handlers
+{
+    /// <summary>
+    /// Validates Facebook tokens.
+    /// </summary>
+    public class FacebookTokenValidator : ITokenValidator
+    {
+        public bool ValidateTokens(Dictionary<string, string> tokens, out string error)
+        {
+            // Check for required tokens
+            if (!tokens.ContainsKey("access_token") || string.IsNullOrWhiteSpace(tokens["access_token"]))
+            {
+                error = "Missing or empty Facebook access_token.";
+                return false;
+            }
+            if (!tokens.ContainsKey("c_user_token") || string.IsNullOrWhiteSpace(tokens["c_user_token"]))
+            {
+                error = "Missing or empty Facebook c_user_token.";
+                return false;
+            }
+            if (!tokens.ContainsKey("xs_token") || string.IsNullOrWhiteSpace(tokens["xs_token"]))
+            {
+                error = "Missing or empty Facebook xs_token.";
+                return false;
+            }
+            // Optionally: Add more checks (format, expiration, etc.)
+            error = null;
+            return true;
+        }
+    }
+}
