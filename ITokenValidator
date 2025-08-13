@@ -1,0 +1,18 @@
+using System.Collections.Generic;
+
+namespace NexusSales.Core.Commanding
+{
+    /// <summary>
+    /// Defines a contract for validating tokens required by a platform.
+    /// </summary>
+    public interface ITokenValidator
+    {
+        /// <summary>
+        /// Validates the provided tokens for the given command.
+        /// </summary>
+        /// <param name="tokens">A dictionary of token names and values (e.g., "access_token", "c_user_token", "xs_token").</param>
+        /// <param name="error">If validation fails, contains the error message.</param>
+        /// <returns>True if valid, false otherwise.</returns>
+        bool ValidateTokens(Dictionary<string, string> tokens, out string error);
+    }
+}
