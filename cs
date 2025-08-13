@@ -10,6 +10,11 @@ using System.Collections;
 using System.Windows.Data;
 using Microsoft.VisualBasic;
 using System.Collections.ObjectModel;
+using System.Data;
+using Newtonsoft.Json; // Ensure you have this NuGet package
+using NexusSales.Core.Commanding;
+using System.Configuration;
+using System.Windows.Media;
 
 namespace NexusSales.FrontEnd.Pages.UserControls
 {
@@ -41,11 +46,31 @@ namespace NexusSales.FrontEnd.Pages.UserControls
 
         public ObservableCollection<Requestee> RequesteeList { get; set; } = new ObservableCollection<Requestee>();
 
+        private DataTable _allCommentsTable;
+        private int _currentPage = 1;
+        private int _pageSize = 100;
+        private int _totalPages = 1;
+
+        public int CurrentPage
+        {
+            get => _currentPage;
+            set
+            {
+                if (_currentPage != value)
+                {
+                    _currentPage = value;
+                    UpdatePagedComments();
+                }
+            }
+        }
+        public int TotalPages => _totalPages;
+
         public ExtractDataView()
         {
             InitializeComponent();
             this.Loaded += ExtractDataView_Loaded;
             this.Unloaded += ExtractDataView_Unloaded;
+            AnimatedDataGrid.FontFamily = new FontFamily("Segoe UI Emoji");
 
             // Add a sample row for testing
             RequesteeList.Add(new Requestee
@@ -64,23 +89,28 @@ namespace NexusSales.FrontEnd.Pages.UserControls
         }
         private void ExtractDataView_Loaded(object sender, RoutedEventArgs e)
         {
-            // Add a sample row for testing (do this before any view setup)
-            var vm = this.DataContext as dynamic;
-            if (vm != null && vm.RequesteeList != null && vm.RequesteeList.Count == 0)
+            // Only add a sample row if DataContext is a ViewModel with RequesteeList
+            var vm = this.DataContext;
+            var requesteeListProp = vm?.GetType().GetProperty("RequesteeList");
+            if (requesteeListProp != null)
             {
-                vm.RequesteeList.Add(new Requestee
+                var list = requesteeListProp.GetValue(vm) as IList<Requestee>;
+                if (list != null && list.Count == 0)
                 {
-                    RowNumber = 1,
-                    Craft = "Electrician",
-                    FirstName = "John",
-                    LastName = "Doe",
-                    ReferredBy = "Jane Smith",
-                    EE = "12345",
-                    Shift = "Morning",
-                    Phone = "555-1234",
-                    NeedBy = "2025-08-12",
-                    Notes = "Sample row for testing"
-                });
+                    list.Add(new Requestee
+                    {
+                        RowNumber = 1,
+                        Craft = "Electrician",
+                        FirstName = "John",
+                        LastName = "Doe",
+                        ReferredBy = "Jane Smith",
+                        EE = "12345",
+                        Shift = "Morning",
+                        Phone = "555-1234",
+                        NeedBy = "2025-08-12",
+                        Notes = "Sample row for testing"
+                    });
+                }
             }
 
             var saved = LoadColumnWidths();
@@ -460,6 +490,135 @@ namespace NexusSales.FrontEnd.Pages.UserControls
         {
             _collectionView.Filter = null;
         }
+
+        private void ExtractFacebookPostId_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // 1. Prompt for Facebook post URL/input
+                string input = PromptForInput("Enter Facebook Post URL or Input:", "Extract Facebook Post ID");
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    MessageBox.Show("Input is required.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 2. Extract Post ID
+                string extractIdCommand = $"[Facebook][Post][ExtractId, {input}]";
+                var tokens = new Dictionary<string, string>
+                {
+                    ["access_token"] = ConfigurationManager.AppSettings["access_token"],
+                    ["c_user_token"] = ConfigurationManager.AppSettings["c_user_token"],
+                    ["xs_token"] = ConfigurationManager.AppSettings["xs_token"]
+                };
+                CommandResult idResult = CommandDispatcher.Execute(extractIdCommand, tokens);
+
+                if (!idResult.Success)
+                {
+                    MessageBox.Show($"Failed to extract Post ID:\n{idResult.Output}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                string postId = idResult.Output?.Trim();
+                if (string.IsNullOrWhiteSpace(postId))
+                {
+                    MessageBox.Show("No Post ID was extracted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // 3. Extract Comments and Authors
+                MessageBox.Show($"Extracting comments for Post ID: {postId}", "Extracting Comments", MessageBoxButton.OK, MessageBoxImage.Information);
+                Console.WriteLine($"Extracting comments for Post ID: {postId}");
+                string commentsCommand = $"[Facebook][Post][ReadComments, {postId}]";
+                CommandResult commentsResult = CommandDispatcher.Execute(commentsCommand, tokens);
+
+                if (!commentsResult.Success)
+                {
+                    MessageBox.Show($"Failed to extract comments:\n{commentsResult.Output}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // 4. Parse the returned data (assume JSON array of objects)
+                var commentsJson = commentsResult.Output;
+                var table = JsonConvert.DeserializeObject<DataTable>(commentsJson);
+
+                // 5. Bind to DataGrid (dynamic columns)
+                SetCommentsTable(table);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An unexpected error occurred:\n{ex.Message}", "Critical Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private string PromptForInput(string message, string title)
+        {
+            // You can replace this with a custom dialog for better UX
+            return Microsoft.VisualBasic.Interaction.InputBox(message, title, "");
+        }
+
+        private void SetCommentsTable(DataTable table)
+        {
+            _allCommentsTable = table;
+            _totalPages = (int)Math.Ceiling((double)_allCommentsTable.Rows.Count / _pageSize);
+            _currentPage = 1;
+            UpdatePagedComments();
+            UpdatePaginationPanel();
+        }
+
+        private void UpdatePagedComments()
+        {
+            if (_allCommentsTable == null) return;
+            var paged = _allCommentsTable.Clone();
+            int start = (_currentPage - 1) * _pageSize;
+            int end = Math.Min(start + _pageSize, _allCommentsTable.Rows.Count);
+            for (int i = start; i < end; i++)
+                paged.ImportRow(_allCommentsTable.Rows[i]);
+            AnimatedDataGrid.ItemsSource = paged.DefaultView;
+            UpdatePaginationPanel();
+        }
+
+        private void UpdatePaginationPanel()
+        {
+            PaginationPanel.Children.Clear();
+            for (int i = 1; i <= _totalPages; i++)
+            {
+                var btn = new Button
+                {
+                    Content = i.ToString(),
+                    Margin = new Thickness(4, 0, 4, 0),
+                    MinWidth = 32,
+                    MinHeight = 32,
+                    Style = (Style)FindResource("AnimatedGlowButtonStyle"),
+                    Tag = i
+                };
+                if (i == _currentPage)
+                {
+                    btn.FontWeight = FontWeights.Bold;
+                    btn.Background = new SolidColorBrush(Color.FromRgb(0, 207, 255));
+                    btn.Foreground = Brushes.White;
+                }
+                btn.Click += (s, e) =>
+                {
+                    CurrentPage = (int)((Button)s).Tag;
+                    UpdatePaginationPanel();
+                };
+
+                // Add a simple animation on load
+                btn.Loaded += (s, e) =>
+                {
+                    var anim = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(250))
+                    {
+                        EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+                    };
+                    btn.BeginAnimation(OpacityProperty, anim);
+                };
+
+                PaginationPanel.Children.Add(btn);
+            }
+        }
+
+
     }
 }
 
