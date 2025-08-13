@@ -1,0 +1,190 @@
+using System;
+using System.Collections.Generic;
+using System.Configuration; // For App.config access
+using System.Reflection;    // For dynamic method invocation
+using System.Linq;          // For attribute parsing
+using System.Globalization; // For culture-invariant parsing
+using NexusSales.Core.Commanding.Handlers;
+
+namespace NexusSales.Core.Commanding
+{
+    /// <summary>
+    /// Represents a parsed command from the FrontEnd.
+    /// Example: [Facebook][Post][ReadComments, PostID]
+    /// </summary>
+    public class CommandRequest
+    {
+        // The target application/platform (e.g., "Facebook", "Messenger")
+        public string App { get; set; }
+        // The function group or section (e.g., "Post", "Send")
+        public string Section { get; set; }
+        // The specific action or function (e.g., "ReadComments", "ExtractId")
+        public string Action { get; set; }
+        // Optional attributes/parameters (e.g., PostID, Message, UserID)
+        public List<string> Attributes { get; set; } = new List<string>();
+    }
+
+    /// <summary>
+    /// The result of executing a command.
+    /// </summary>
+    public class CommandResult
+    {
+        // Indicates if the command was successful
+        public bool Success { get; set; }
+        // The output or error message
+        public string Output { get; set; }
+        // Optional: Any data returned by the command
+        public object Data { get; set; }
+    }
+
+    /// <summary>
+    /// Central dispatcher for all commands sent from the FrontEnd.
+    /// </summary>
+    public static class CommandDispatcher
+    {
+        /// <summary>
+        /// Entry point: Receives a command string, parses it, and executes the mapped function.
+        /// </summary>
+        /// <param name="commandString">The command in format: [App][Section][Action, Attr1, Attr2...]</param>
+        /// <returns>CommandResult with output or error</returns>
+        public static CommandResult Execute(string commandString)
+        {
+            try
+            {
+                // Parse the command string into a CommandRequest object
+                var request = ParseCommand(commandString);
+
+                // Resolve the function name from App.config (encrypted at build)
+                string functionKey = $"{request.App}.{request.Section}.{request.Action}";
+                string functionName = ConfigurationManager.AppSettings[functionKey];
+
+                if (string.IsNullOrWhiteSpace(functionName))
+                {
+                    // Function mapping not found
+                    return new CommandResult
+                    {
+                        Success = false,
+                        Output = $"Function mapping for '{functionKey}' not found in configuration."
+                    };
+                }
+
+                // Use reflection to find and invoke the function
+                // All command handler classes should be in the "NexusSales.Core.Commanding.Handlers" namespace
+                var handlerType = Type.GetType($"NexusSales.Core.Commanding.Handlers.{request.App}Handler");
+                if (handlerType == null)
+                {
+                    return new CommandResult
+                    {
+                        Success = false,
+                        Output = $"Handler for '{request.App}' not implemented."
+                    };
+                }
+
+                // Find the method by name (case-insensitive)
+                var method = handlerType.GetMethod(functionName, BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase);
+                if (method == null)
+                {
+                    return new CommandResult
+                    {
+                        Success = false,
+                        Output = $"Function '{functionName}' not found in handler '{handlerType.Name}'."
+                    };
+                }
+
+                // Prepare parameters (all as string, or parse as needed)
+                var parameters = method.GetParameters();
+                object[] args = new object[parameters.Length];
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    if (i < request.Attributes.Count)
+                    {
+                        // Convert attribute to expected parameter type
+                        args[i] = Convert.ChangeType(request.Attributes[i], parameters[i].ParameterType, CultureInfo.InvariantCulture);
+                    }
+                    else if (parameters[i].IsOptional)
+                    {
+                        // Use the default value for optional parameters
+                        args[i] = parameters[i].DefaultValue;
+                    }
+                    else
+                    {
+                        // Required parameter missing
+                        throw new ArgumentException($"Missing parameter does not have a default value. Parameter name: {parameters[i].Name}");
+                    }
+                }
+
+                // Invoke the method and return the result
+                var result = method.Invoke(null, args);
+                return new CommandResult
+                {
+                    Success = true,
+                    Output = result?.ToString(),
+                    Data = result
+                };
+            }
+            catch (Exception ex)
+            {
+                // Log error (implement your logging here)
+                // Logger.LogError("CommandDispatcher.Execute", ex);
+
+                return new CommandResult
+                {
+                    Success = false,
+                    Output = $"Error executing command: {ex.Message}"
+                };
+            }
+        }
+
+        /// <summary>
+        /// Overloaded entry point: Receives a command string and tokens, parses it, and executes the mapped function.
+        /// </summary>
+        /// <param name="commandString">The command in format: [App][Section][Action, Attr1, Attr2...]</param>
+        /// <param name="tokens">A dictionary of tokens for additional context</param>
+        /// <returns>CommandResult with output or error</returns>
+        public static CommandResult Execute(string commandString, Dictionary<string, string> tokens)
+        {
+            // Example: Validate tokens for Facebook commands
+            var request = ParseCommand(commandString);
+            if (request.App.Equals("Facebook", StringComparison.OrdinalIgnoreCase))
+            {
+                var validator = new FacebookTokenValidator();
+                if (!validator.ValidateTokens(tokens, out string error))
+                {
+                    return new CommandResult
+                    {
+                        Success = false,
+                        Output = $"Token validation failed: {error}"
+                    };
+                }
+            }
+
+            // Proceed with normal execution
+            return Execute(commandString);
+        }
+
+        /// <summary>
+        /// Parses a command string into a CommandRequest object.
+        /// Example: [Facebook][Post][ReadComments, 123456789]
+        /// </summary>
+        private static CommandRequest ParseCommand(string command)
+        {
+            // Split by brackets and trim
+            var parts = command.Split(new[] { '[', ']' }, StringSplitOptions.RemoveEmptyEntries)
+                               .Select(p => p.Trim()).ToList();
+
+            if (parts.Count < 3)
+                throw new ArgumentException("Invalid command format. Expected at least [App][Section][Action,...]");
+
+            var actionAndAttrs = parts[2].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                         .Select(s => s.Trim()).ToList();
+
+            return new CommandRequest
+            {
+                App = parts[0],
+                Section = parts[1],
+                Action = actionAndAttrs[0],
+                Attributes = actionAndAttrs.Skip(1).ToList()
+            };
+        }
+    }
+}
