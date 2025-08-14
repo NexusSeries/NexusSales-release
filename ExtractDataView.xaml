@@ -1,0 +1,845 @@
+<UserControl x:Class="NexusSales.FrontEnd.Pages.UserControls.ExtractDataView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:NexusSales.FrontEnd.Pages.UserControls"
+             xmlns:uc="clr-namespace:NexusSales.FrontEnd.Pages.UserControls"
+             Background="Transparent">
+    <UserControl.Resources>
+
+            <!-- Modern DropShadowEffect for general use -->
+            <!-- Modern DropShadowEffect -->
+        <DropShadowEffect x:Key="ModernDropShadow" BlurRadius="24" ShadowDepth="0" Opacity="0.28" Color="#222"/>
+
+        <!-- Row Hover Animation -->
+        <Style x:Key="AnimatedDataGridRowStyle" TargetType="DataGridRow">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="0" ShadowDepth="0" Opacity="0"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="MouseEnter">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <ColorAnimation Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                            To="#eaf6fb" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="MouseLeave">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <ColorAnimation Storyboard.TargetProperty="(Background).(SolidColorBrush.Color)"
+                                            To="Transparent" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#eaf6fb"/>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect BlurRadius="8" ShadowDepth="0" Opacity="0.12"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#d1eaff"/>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="0" Opacity="0.18"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Cell Style with Custom Colors -->
+        <Style x:Key="AnimatedCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#2d3a4a"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border x:Name="cellBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="cellContent"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left"
+                                              RecognizesAccessKey="True"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Hover -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="cellBorder" Property="Background" Value="#f5f9f9"/>
+                            </Trigger>
+                            <!-- Focused (keyboard navigation or active) -->
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="cellBorder" Property="Background" Value="#e3eff6"/>
+                            </Trigger>
+                            <!-- Selected CELL only -->
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="cellBorder" Property="Background" Value="#e3eff6"/>
+                                <Setter TargetName="cellBorder" Property="BorderBrush" Value="#4c575d"/>
+                                <Setter TargetName="cellBorder" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                            <!-- Mouse click animation -->
+                            <EventTrigger RoutedEvent="PreviewMouseLeftButtonDown">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="cellBorder"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         From="1" To="0.7" Duration="0:0:0.08" AutoReverse="True"/>
+                                        <ColorAnimation Storyboard.TargetName="cellBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        To="#e3eff6" Duration="0:0:0.12" AutoReverse="True"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Row Number Cell Style -->
+        <Style x:Key="RowNumberCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource AnimatedCellStyle}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#2d3a4a"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border x:Name="cellBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="cellContent"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left"
+                                              RecognizesAccessKey="True"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Focused (keyboard navigation or active) -->
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="cellBorder" Property="Background" Value="#abcad9"/>
+                                <Setter TargetName="cellBorder" Property="BorderBrush" Value="#4c575d"/>
+                                <Setter TargetName="cellBorder" Property="BorderThickness" Value="2"/>
+                                <Setter TargetName="cellContent" Property="TextElement.Foreground" Value="#2d3a4a"/>
+                            </Trigger>
+                            <!-- Mouse click animation -->
+                            <EventTrigger RoutedEvent="PreviewMouseLeftButtonDown">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="cellBorder"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         From="1" To="0.7" Duration="0:0:0.08" AutoReverse="True"/>
+                                        <ColorAnimation Storyboard.TargetName="cellBorder"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        To="#abcad9" Duration="0:0:0.12" AutoReverse="True"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Header Style -->
+        
+        <Style x:Key="AnimatedHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#FF00CFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="BorderBrush" Value="#FF0099CC"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="Padding" Value="8,0,8,0"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#3300CFFF" Opacity="0.4"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                 To="1.08" Duration="0:0:0.18"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                 To="1.08" Duration="0:0:0.18"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                 To="1" Duration="0:0:0.18"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                 To="1" Duration="0:0:0.18"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Modern Animated ContextMenu Style (smaller size) -->
+        <Style x:Key="ModernContextMenuStyle" TargetType="ContextMenu">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border x:Name="Border"
+                                Background="#F8FAFC"
+                                CornerRadius="12"
+                                Padding="8"
+                                MinWidth="150"
+                                BorderBrush="#D0D7E2"
+                                BorderThickness="1"
+                                Opacity="0"
+                                Effect="{StaticResource ModernDropShadow}">
+                            <StackPanel IsItemsHost="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <EventTrigger RoutedEvent="ContextMenu.Opened">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Border"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         From="0" To="1" Duration="0:0:0.18"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern MenuItem Style (smaller size, visible submenu background) -->
+        <Style x:Key="ModernMenuItemStyle" TargetType="MenuItem">
+            <Setter Property="FontFamily" Value="Segoe UI Emoji"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#2d3a4a"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
+            <Setter Property="MinHeight" Value="24"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border ClipToBounds="True">
+                            <Grid>
+                                <Grid.RenderTransform>
+                                    <ScaleTransform x:Name="scale" ScaleX="1" ScaleY="1"/>
+                                </Grid.RenderTransform>
+                                <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" CornerRadius="6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="20"/>
+                                        </Grid.ColumnDefinitions>
+                                        <!-- Icon (if any) -->
+                                        <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,6,0"/>
+                                        <!-- Header -->
+                                        <ContentPresenter Grid.Column="1"
+                                                          ContentSource="Header"
+                                                          RecognizesAccessKey="True"
+                                                          VerticalAlignment="Center"
+                                                          HorizontalAlignment="Left"
+                                                          Margin="0,0,0,0"
+                                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                        <!-- Submenu Arrow -->
+                                        <TextBlock Grid.Column="2"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   Text="&#xE76C;"
+                                                   FontSize="12"
+                                                   Foreground="#8AA4C8"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Right"
+                                                   Visibility="Collapsed"
+                                                   x:Name="SubmenuArrow"/>
+                                    </Grid>
+                                </Border>
+                                <!-- Submenu Popup with visible background -->
+                                <Popup x:Name="PART_Popup"
+                                       Placement="Right"
+                                       PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                       IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                       AllowsTransparency="True"
+                                       Focusable="False"
+                                       PopupAnimation="Fade"
+                                       Margin="2,0,0,0">
+                                    <Border SnapsToDevicePixels="True"
+                                            Background="#F8FAFC"
+                                            CornerRadius="8"
+                                            MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=MenuItem}}"
+                                            BorderBrush="#D0D7E2"
+                                            BorderThickness="1">
+                                        <StackPanel IsItemsHost="True"
+                                                    KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Animate scale on highlight -->
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="scale"
+                                                             Storyboard.TargetProperty="ScaleX"
+                                                             To="1.08" Duration="0:0:0.13" />
+                                            <DoubleAnimation Storyboard.TargetName="scale"
+                                                             Storyboard.TargetProperty="ScaleY"
+                                                             To="1.08" Duration="0:0:0.13" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="scale"
+                                                             Storyboard.TargetProperty="ScaleX"
+                                                             To="1" Duration="0:0:0.13" />
+                                            <DoubleAnimation Storyboard.TargetName="scale"
+                                                             Storyboard.TargetProperty="ScaleY"
+                                                             To="1" Duration="0:0:0.13" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#eaf6fb"/>
+                                <Setter Property="Foreground" Value="#0078d4"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#B0B0B0"/>
+                            </Trigger>
+                            <!-- Show arrow only if there are subitems -->
+                            <Trigger Property="HasItems" Value="True">
+                                <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter TargetName="SubmenuArrow" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Separator Style (thicker and more visible) -->
+        <Style TargetType="Separator" x:Key="ModernSeparatorStyle">
+            <Setter Property="Margin" Value="0,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Border Height="2" Background="#e0e6ed" Margin="8,0" CornerRadius="1"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Rounded Button Style -->
+        <Style x:Key="RoundedButtonStyle" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Styled Header -->
+        <Style x:Key="StyledHeader" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#FF00CFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="BorderBrush" Value="#FF0099CC"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="Padding" Value="8,0,8,0"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#3300CFFF" Opacity="0.4"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Custom ScrollBar Style -->
+        <Style x:Key="CustomScrollBar" TargetType="ScrollBar">
+            <Setter Property="Background" Value="#FF1A1A1A"/>
+            <Setter Property="Foreground" Value="#FF00CFFF"/>
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid>
+                            <Track Name="PART_Track" IsDirectionReversed="true"
+                                   Value="{TemplateBinding Value}"
+                                   Minimum="{TemplateBinding Minimum}"
+                                   Maximum="{TemplateBinding Maximum}"
+                                   ViewportSize="{TemplateBinding ViewportSize}">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.LineUpCommand" Style="{x:Null}" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Background="#FF00CFFF" BorderBrush="#FF0099CC" BorderThickness="1"/>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.LineDownCommand" Style="{x:Null}" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Fancy Modern ScrollBar Style -->
+        <Style x:Key="FancyScrollBar" TargetType="ScrollBar">
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Width" Value="14"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="Transparent">
+                            <Track x:Name="PART_Track"
+                                   IsDirectionReversed="true"
+                                   Value="{TemplateBinding Value}"
+                                   Minimum="{TemplateBinding Minimum}"
+                                   Maximum="{TemplateBinding Maximum}"
+                                   ViewportSize="{TemplateBinding ViewportSize}">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.LineUpCommand"
+                                                  Style="{x:Null}" 
+                                                  Background="Transparent"
+                                                  IsTabStop="False"
+                                                  Opacity="0"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb x:Name="Thumb"
+                                           Height="48"
+                                           Margin="0"
+                                           Cursor="Hand">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border x:Name="ThumbBorder"
+                                                        Width="10"
+                                                        MinHeight="32"
+                                                        CornerRadius="6"
+                                                        BorderBrush="#FF0099CC"
+                                                        BorderThickness="1.5"
+                                                        Effect="{StaticResource ModernDropShadow}"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Stretch">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                            <GradientStop Color="#FF00CFFF" Offset="0"/>
+                                                            <GradientStop Color="#FF0099CC" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ThumbBorder" Property="Background">
+                                                            <Setter.Value>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                    <GradientStop Color="#FF00E1FF" Offset="0"/>
+                                                                    <GradientStop Color="#FF00CFFF" Offset="1"/>
+                                                                </LinearGradientBrush>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                        <Setter TargetName="ThumbBorder" Property="Effect">
+                                                            <Setter.Value>
+                                                                <DropShadowEffect BlurRadius="16" ShadowDepth="0" Opacity="0.35" Color="#FF00CFFF"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Trigger>
+                                                    <EventTrigger RoutedEvent="PreviewMouseLeftButtonDown">
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <ColorAnimation Storyboard.TargetName="ThumbBorder"
+                                                                                Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].Color"
+                                                                                To="#FF0099CC" Duration="0:0:0.1"/>
+                                                                <ColorAnimation Storyboard.TargetName="ThumbBorder"
+                                                                                Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].Color"
+                                                                                To="#FF00CFFF" Duration="0:0:0.1"/>
+                                                                <DoubleAnimation Storyboard.TargetName="ThumbBorder"
+                                                                                 Storyboard.TargetProperty="Effect.BlurRadius"
+                                                                                 To="24" Duration="0:0:0.1"/>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </EventTrigger>
+                                                    <EventTrigger RoutedEvent="PreviewMouseLeftButtonUp">
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <ColorAnimation Storyboard.TargetName="ThumbBorder"
+                                                                                Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[0].Color"
+                                                                                To="#FF00CFFF" Duration="0:0:0.1"/>
+                                                                <ColorAnimation Storyboard.TargetName="ThumbBorder"
+                                                                                Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].Color"
+                                                                                To="#FF0099CC" Duration="0:0:0.1"/>
+                                                                <DoubleAnimation Storyboard.TargetName="ThumbBorder"
+                                                                                 Storyboard.TargetProperty="Effect.BlurRadius"
+                                                                                 To="16" Duration="0:0:0.1"/>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </EventTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.LineDownCommand"
+                                                  Style="{x:Null}" 
+                                                  Background="Transparent"
+                                                  IsTabStop="False"
+                                                  Opacity="0"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Minimal ScrollBar Style for both Vertical and Horizontal -->
+        <Style TargetType="ScrollBar" x:Key="MinimalScrollBar">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Width" Value="2"/>
+            <Setter Property="Height" Value="2"/>
+            <Style.Triggers>
+                <!-- Vertical ScrollBar -->
+                <Trigger Property="Orientation" Value="Vertical">
+                    <Setter Property="Width" Value="2"/>
+                    <Setter Property="Height" Value="Auto"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Grid Background="Transparent">
+                                    <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                        <Track.DecreaseRepeatButton>
+                                            <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0"/>
+                                        </Track.DecreaseRepeatButton>
+                                        <Track.Thumb>
+                                            <Thumb>
+                                                <Thumb.Template>
+                                                    <ControlTemplate>
+                                                        <Border Background="{StaticResource AccentBrush}" 
+                                                                CornerRadius="5"
+                                                                Width="10"
+                                                                Opacity="0.8"/>
+                                                    </ControlTemplate>
+                                                </Thumb.Template>
+                                            </Thumb>
+                                        </Track.Thumb>
+                                        <Track.IncreaseRepeatButton>
+                                            <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0"/>
+                                        </Track.IncreaseRepeatButton>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <!-- Horizontal ScrollBar -->
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Height" Value="2"/>
+                    <Setter Property="Width" Value="Auto"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ScrollBar">
+                                <Grid Background="Transparent">
+                                    <Track x:Name="PART_Track" IsDirectionReversed="False">
+                                        <Track.DecreaseRepeatButton>
+                                            <RepeatButton Command="ScrollBar.PageLeftCommand" Opacity="0"/>
+                                        </Track.DecreaseRepeatButton>
+                                        <Track.Thumb>
+                                            <Thumb>
+                                                <Thumb.Template>
+                                                    <ControlTemplate>
+                                                        <Border Background="{StaticResource AccentBrush}" 
+                                                                CornerRadius="5"
+                                                                Height="10"
+                                                                Opacity="0.8"/>
+                                                    </ControlTemplate>
+                                                </Thumb.Template>
+                                            </Thumb>
+                                        </Track.Thumb>
+                                        <Track.IncreaseRepeatButton>
+                                            <RepeatButton Command="ScrollBar.PageRightCommand" Opacity="0"/>
+                                        </Track.IncreaseRepeatButton>
+                                    </Track>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="Transparent" Margin="24">
+        <Border Background="White" CornerRadius="16" Padding="18" BorderBrush="#e0e6ed" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Title -->
+                    <RowDefinition Height="Auto"/> <!-- Reset Button -->
+                    <RowDefinition Height="Auto"/> <!-- Extract Button -->
+                    <RowDefinition Height="Auto"/> <!-- Extra Button -->
+                    <RowDefinition Height="*"/>    <!-- DataGrid -->
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Requestee" FontSize="22" FontWeight="Bold" Foreground="#2d3a4a" Margin="0,0,0,12" Grid.Row="0"/>
+                <Button Content="Reset Column Widths" Click="ResetColumnWidths_Click" Margin="0,0,0,10" Grid.Row="1"/>
+                <Button Content="Extract Facebook Post ID"
+                        Margin="0,0,0,10"
+                        Padding="16,6"
+                        FontWeight="SemiBold"
+                        Background="#4267B2"
+                        Foreground="White"
+                        BorderBrush="#29487d"
+                        BorderThickness="1"
+                        Click="ExtractFacebookPostId_Click"
+                        Cursor="Hand"
+                        HorizontalAlignment="Left"
+                        Effect="{StaticResource ModernDropShadow}"
+                        Grid.Row="2"/>
+                <Button Style="{StaticResource RoundedButtonStyle}" Grid.Row="3"/>
+                <DataGrid x:Name="AnimatedDataGrid"
+                          AutoGenerateColumns="True"
+                          HeadersVisibility="Column"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          CanUserResizeRows="True"
+                          CanUserReorderColumns="True"
+                          GridLinesVisibility="None"
+                          SelectionMode="Extended"
+                          SelectionUnit="CellOrRowHeader"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          RowHeight="38"
+                          FontSize="15"
+                          FontFamily="Segoe UI Emoji"
+                          Margin="0,0,0,0"
+                          RowStyle="{StaticResource AnimatedDataGridRowStyle}"
+                          CellStyle="{StaticResource AnimatedCellStyle}"
+                          ColumnHeaderStyle="{StaticResource AnimatedHeaderStyle}"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          Grid.Row="4"
+                          AutoGeneratingColumn="AnimatedDataGrid_AutoGeneratingColumn"
+                          LoadingRow="AnimatedDataGrid_LoadingRow">
+                    <DataGrid.Columns>
+                        <!-- Fixed Row Number Column -->
+                        <DataGridTemplateColumn Header="#" Width="40" IsReadOnly="True" CellStyle="{StaticResource RowNumberCellStyle}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=Header}"
+                                            Style="{StaticResource RoundedButtonStyle}"
+                                            Padding="0"
+                                            Margin="0"
+                                            Width="32"
+                                            Height="32"
+                                            Command="{x:Null}"
+                                            Click="RowNumberButton_Click"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                    <DataGrid.Resources>
+                        <Style TargetType="ScrollBar" BasedOn="{StaticResource MinimalScrollBar}" />
+                    </DataGrid.Resources>
+                    <DataGrid.ContextMenu>
+                        <ContextMenu x:Name="TableContextMenu"
+                                     Style="{StaticResource ModernContextMenuStyle}"
+                                     Opened="TableContextMenu_Opened">
+                            <MenuItem Header="Insert column left" Click="InsertColumnLeft_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Insert column right" Click="InsertColumnRight_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <Separator Style="{StaticResource ModernSeparatorStyle}"/>
+                            <MenuItem Header="Clear column" Click="ClearColumn_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Read only" IsCheckable="True" Click="ReadOnlyColumn_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Alignment" Style="{StaticResource ModernMenuItemStyle}">
+                                <MenuItem Header="Left" Click="AlignLeft_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Center" Click="AlignCenter_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Right" Click="AlignRight_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Justify" Click="AlignJustify_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            </MenuItem>
+                            <MenuItem Header="Vertical Alignment" Style="{StaticResource ModernMenuItemStyle}">
+                                <MenuItem Header="Top" Click="AlignTop_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Middle" Click="AlignMiddle_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Bottom" Click="AlignBottom_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            </MenuItem>
+                            <Separator Style="{StaticResource ModernSeparatorStyle}"/>
+                            <MenuItem Header="Filter by condition" Style="{StaticResource ModernMenuItemStyle}">
+                                <MenuItem Header="Contains" Click="FilterContains_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Does not contain" Click="FilterNotContains_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Equals" Click="FilterEquals_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                                <MenuItem Header="Not equals" Click="FilterNotEquals_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            </MenuItem>
+                            <MenuItem Header="Filter by value" Click="FilterByValue_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Clear filter" Click="ClearFilter_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <Separator Style="{StaticResource ModernSeparatorStyle}"/>
+                            <MenuItem Header="Hide column" Click="HideColumn_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Show all columns" Click="ShowAllColumns_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <Separator Style="{StaticResource ModernSeparatorStyle}"/>
+                            <MenuItem Header="Reset column width" Click="ResetColumnWidth_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Reset all column widths" Click="ResetColumnWidths_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <Separator Style="{StaticResource ModernSeparatorStyle}"/>
+                            <MenuItem Header="Export to Excel" Click="ExportToExcel_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                            <MenuItem Header="Copy cell" Style="{StaticResource ModernMenuItemStyle}">
+                                <MenuItem.Icon>
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C8;" FontSize="18" Foreground="#8AA4C8"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Paste cell" Click="PasteCell_Click" Style="{StaticResource ModernMenuItemStyle}"/>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
+                </DataGrid>
+
+                <!-- Pagination Bar -->
+                <StackPanel x:Name="PaginationPanel"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,0,16"
+                            Panel.ZIndex="10">
+                    <!-- Page buttons will be generated dynamically -->
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
+    
+    
+    
+    <!--
+================================================================================
+ExtractDataView.xaml & ExtractDataView.xaml.cs - Lesson and Reference Guide
+================================================================================
+
+Overview:
+=========
+This UserControl is a modern, animated, and feature-rich WPF DataGrid host for displaying, filtering, and managing tabular data (such as Facebook comments or requestee lists). It is designed for high usability, visual appeal, and extensibility, supporting advanced features like pagination, emoji rendering, animated UI, and Excel-style copy-paste.
+
+=================================================================================
+XAML (ExtractDataView.xaml) - Visual and Style Layer
+=================================================================================
+
+1. Layout & Structure:
+   - The main layout is a Grid inside a rounded Border, providing a clean, card-like appearance.
+   - The DataGrid is placed in the main area, with a title, action buttons, and a pagination bar.
+
+2. DataGrid Styling:
+   - Row and cell styles use custom animations for hover, selection, and click, providing immediate visual feedback.
+   - The DataGrid uses a custom header style ("AnimatedHeaderStyle") with bold color, drop shadow, and animated scaling on hover.
+   - The scrollbar is restyled ("CustomScrollBar") for a modern, colored look matching the application's theme.
+   - The cell style ("AnimatedCellStyle") animates background and border on hover, focus, and selection, and supports emoji rendering via the "Segoe UI Emoji" font.
+
+3. Context Menu:
+   - A modern, animated context menu provides quick access to column operations (insert, clear, hide, alignment), filtering, and export/copy actions.
+   - Menu items are styled for a compact, touch-friendly, and visually consistent experience.
+
+4. Pagination:
+   - A StackPanel at the bottom center hosts animated page buttons, allowing navigation through large datasets (e.g., thousands of Facebook comments).
+
+5. Accessibility & Usability:
+   - The DataGrid supports multi-cell selection (SelectionUnit="CellOrRowHeader", SelectionMode="Extended") for Excel-style copy-paste.
+   - All visual elements are designed for clarity, contrast, and responsiveness.
+
+=================================================================================
+Code-Behind (ExtractDataView.xaml.cs) - Logic and Behavior Layer
+=================================================================================
+
+1. Data Management:
+   - The control supports both a ViewModel-driven ObservableCollection (for requestee lists) and dynamic DataTable binding (for Facebook comments).
+   - Column widths are persisted per user in the AppData folder, and can be reset via UI.
+
+2. Pagination Logic:
+   - Large datasets are paged in memory, with up to 100 items per page by default.
+   - The pagination bar is dynamically updated to reflect the current page and total pages.
+
+3. Asynchronous Data Loading:
+   - Facebook comment extraction is performed on a background thread using async/await and Task.Run, ensuring the UI remains responsive even for very large posts (100k+ comments).
+   - UI updates (such as binding new data) are marshaled back to the UI thread.
+
+4. Copy-Paste and Excel Integration:
+   - Users can select multiple cells (by mouse drag or Ctrl/Shift+Click) and press Ctrl+C to copy the selection.
+   - The copied data is formatted as tab-delimited text, so pasting into Excel preserves the grid structure and cell alignment.
+   - The copy logic includes headers if all columns are selected.
+
+5. Filtering and Column Operations:
+   - The context menu provides filtering by value or condition, column hiding/showing, alignment, and width reset.
+   - Filtering is implemented using WPF's CollectionView filtering mechanism.
+
+6. Emoji Support:
+   - The DataGrid uses the "Segoe UI Emoji" font to render Unicode emojis in color (on supported Windows versions).
+   - For full color emoji support in all environments, consider using a third-party library like Emoji.Wpf.
+
+7. Animations and Visual Feedback:
+   - All interactive elements (rows, cells, headers, menu items, pagination buttons) use WPF Storyboards for smooth, modern animations.
+   - Drop shadows and color transitions enhance the sense of depth and interactivity.
+
+8. Extensibility:
+   - The control is designed for easy extension: new context menu actions, custom cell templates, and additional data operations can be added with minimal changes.
+=================================================================================
+
+Best Practices & Tips:
+=================================================================================
+
+- Always use async/await for long-running data operations to keep the UI responsive.
+- Use tab-delimited text for Excel interoperability; Excel will parse this into cells automatically.
+- Persist user preferences (like column widths) in AppData for a consistent experience.
+- Use styles and resources for all visual elements to ensure maintainability and theme consistency.
+- For advanced emoji or image rendering, consider using a custom cell template or third-party control.
+- Test copy-paste and filtering with large datasets to ensure performance and usability.
+
+=================================================================================
+Summary:
+=================================================================================
+
+ExtractDataView.xaml and ExtractDataView.xaml.cs together provide a robust, modern, and user-friendly data grid experience in WPF, suitable for both business data and social media comment management. The design emphasizes responsiveness, visual clarity, and productivity, making it easy for users to work with large, complex datasets in a familiar, Excel-like environment.
+
+================================================================================
+-->
