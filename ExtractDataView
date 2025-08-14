@@ -1,0 +1,724 @@
+using System;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Collections.Generic;
+using System.Windows.Controls.Primitives;
+using System.ComponentModel;
+using System.IO;
+using System.Collections;
+using System.Windows.Data;
+using Microsoft.VisualBasic;
+using System.Collections.ObjectModel;
+using System.Data;
+using Newtonsoft.Json; // Ensure you have this NuGet package
+using NexusSales.Core.Commanding;
+using System.Configuration;
+using System.Windows.Media;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using System.Globalization;
+
+namespace NexusSales.FrontEnd.Pages.UserControls
+{
+    public partial class ExtractDataView : UserControl
+    {
+        private const string ColumnWidthsKey = "ExtractDataView_ColumnWidths";
+
+        private static readonly DataGridLength[] DefaultColumnWidths = new DataGridLength[]
+        {
+            new DataGridLength(40),         // #
+            new DataGridLength(1, DataGridLengthUnitType.Auto), // Craft
+            new DataGridLength(1, DataGridLengthUnitType.Star), // First name
+            new DataGridLength(1, DataGridLengthUnitType.Star), // Last name
+            new DataGridLength(1, DataGridLengthUnitType.Star), // Referred by
+            new DataGridLength(80),         // EE
+            new DataGridLength(90),         // Shift
+            new DataGridLength(130),        // Phone
+            new DataGridLength(100),        // Need by
+            new DataGridLength(180),        // Notes
+        };
+
+        public static List<ExtractDataView> ActiveViews { get; } = new List<ExtractDataView>();
+
+        private ListCollectionView _collectionView;
+
+        private string _currentFilterColumn;
+        private string _currentFilterValue;
+        private string _currentFilterCondition; // e.g., "Contains", "Equals", etc.
+
+        public ObservableCollection<Requestee> RequesteeList { get; set; } = new ObservableCollection<Requestee>();
+
+        private DataTable _allCommentsTable;
+        private int _currentPage = 1;
+        private int _pageSize = 100;
+        private int _totalPages = 1;
+
+        public int CurrentPage
+        {
+            get => _currentPage;
+            set
+            {
+                if (_currentPage != value)
+                {
+                    _currentPage = value;
+                    UpdatePagedComments();
+                }
+            }
+        }
+        public int TotalPages => _totalPages;
+
+        public ExtractDataView()
+        {
+            InitializeComponent();
+            this.Loaded += ExtractDataView_Loaded;
+            this.Unloaded += ExtractDataView_Unloaded;
+            AnimatedDataGrid.FontFamily = new FontFamily("Segoe UI Emoji");
+
+            AnimatedDataGrid.PreviewKeyDown += (s, e) =>
+            {
+                if (e.Key == Key.C && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+                {
+                    CopySelectedCellsToClipboard();
+                    e.Handled = true;
+                }
+            };
+
+            // Add a sample row for testing
+            RequesteeList.Add(new Requestee
+            {
+                RowNumber = 1,
+                Craft = "Electrician",
+                FirstName = "John",
+                LastName = "Doe",
+                ReferredBy = "Jane Smith",
+                EE = "12345",
+                Shift = "Morning",
+                Phone = "555-1234",
+                NeedBy = "2025-08-12",
+                Notes = "Sample row for testing"
+            });
+        }
+        private void ExtractDataView_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Only add a sample row if DataContext is a ViewModel with RequesteeList
+            var vm = this.DataContext;
+            var requesteeListProp = vm?.GetType().GetProperty("RequesteeList");
+            if (requesteeListProp != null)
+            {
+                var list = requesteeListProp.GetValue(vm) as IList<Requestee>;
+                if (list != null && list.Count == 0)
+                {
+                    list.Add(new Requestee
+                    {
+                        RowNumber = 1,
+                        Craft = "Electrician",
+                        FirstName = "John",
+                        LastName = "Doe",
+                        ReferredBy = "Jane Smith",
+                        EE = "12345",
+                        Shift = "Morning",
+                        Phone = "555-1234",
+                        NeedBy = "2025-08-12",
+                        Notes = "Sample row for testing"
+                    });
+                }
+            }
+
+            var saved = LoadColumnWidths();
+            if (!string.IsNullOrEmpty(saved))
+            {
+                var widths = saved.Split(',').Select(s => double.TryParse(s, out var w) ? w : double.NaN).ToArray();
+                for (int i = 0; i < widths.Length && i < AnimatedDataGrid.Columns.Count; i++)
+                {
+                    if (!double.IsNaN(widths[i]) && widths[i] > 0)
+                        AnimatedDataGrid.Columns[i].Width = widths[i];
+                }
+            }
+
+            // Subscribe to width changes for each column
+            foreach (var col in AnimatedDataGrid.Columns)
+            {
+                DependencyPropertyDescriptor.FromProperty(DataGridColumn.WidthProperty, typeof(DataGridColumn))
+                    .AddValueChanged(col, DataGridColumn_WidthChanged);
+            }
+
+            foreach (var col in AnimatedDataGrid.Columns)
+            {
+                DependencyPropertyDescriptor.FromProperty(DataGridColumn.WidthProperty, typeof(DataGridColumn))
+                    .AddValueChanged(col, DataGridColumn_WidthChanged);
+            }
+
+            // Only set up the collection view if not already set
+            if (_collectionView == null)
+            {
+                var source = AnimatedDataGrid.ItemsSource as IList;
+                if (source == null && AnimatedDataGrid.ItemsSource is IEnumerable enumerable)
+                    source = enumerable.Cast<object>().ToList();
+
+                if (source != null)
+                {
+                    _collectionView = new ListCollectionView(source);
+                    AnimatedDataGrid.ItemsSource = _collectionView;
+                }
+            }
+        }
+
+        private void ExtractDataView_Unloaded(object sender, RoutedEventArgs e)
+        {
+            SaveColumnWidths();
+            ActiveViews.Remove(this);
+        }
+
+        private string GetWidthsFilePath()
+        {
+            var dir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var folder = Path.Combine(dir, "NexusSales");
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+            return Path.Combine(folder, "ExtractDataView_ColumnWidths.txt");
+        }
+
+        private void DataGridColumn_WidthChanged(object sender, EventArgs e)
+        {
+            SaveColumnWidths();
+        }
+
+        private void SaveColumnWidths()
+        {
+            var widths = AnimatedDataGrid.Columns.Select(c => c.Width.DisplayValue.ToString()).ToArray();
+            File.WriteAllText(GetWidthsFilePath(), string.Join(",", widths));
+        }
+
+        private string LoadColumnWidths()
+        {
+            var path = GetWidthsFilePath();
+            return File.Exists(path) ? File.ReadAllText(path) : null;
+        }
+
+        private void AnimatedDataGrid_ColumnWidthChanged(object sender, DataGridColumnEventArgs e)
+        {
+            // Save all column widths as comma-separated string
+            SaveColumnWidths();
+        }
+
+        private void FilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Example: Show a simple message or open your filter UI here
+            Button btn = sender as Button;
+            MessageBox.Show("Filter button clicked for column: " + (btn?.DataContext as DataGridColumnHeader)?.Content?.ToString());
+        }
+
+        private void ResetColumnWidths_Click(object sender, RoutedEventArgs e)
+        {
+            ResetColumnWidths();
+        }
+
+        public void ResetColumnWidths()
+        {
+            for (int i = 0; i < AnimatedDataGrid.Columns.Count && i < DefaultColumnWidths.Length; i++)
+            {
+                AnimatedDataGrid.Columns[i].Width = DefaultColumnWidths[i];
+            }
+            // Remove saved widths from file
+            var path = GetWidthsFilePath();
+            if (File.Exists(path)) File.Delete(path);
+        }
+
+        // Helper to get the clicked column
+        private DataGridColumn GetContextColumn()
+        {
+            if (AnimatedDataGrid.CurrentCell.Column != null)
+                return AnimatedDataGrid.CurrentCell.Column;
+            return null;
+        }
+
+        private void TableContextMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            // Optionally, enable/disable menu items based on context
+            // Example: disable Paste if clipboard is empty
+            var menu = sender as ContextMenu;
+            if (menu != null)
+            {
+                var pasteItem = menu.Items.OfType<MenuItem>().FirstOrDefault(i => (string)i.Header == "Paste cell");
+                if (pasteItem != null)
+                    pasteItem.IsEnabled = Clipboard.ContainsText();
+            }
+        }
+
+        private void InsertColumnLeft_Click(object sender, RoutedEventArgs e)
+        {
+            // Implement logic to insert a column to the left
+        }
+
+        private void InsertColumnRight_Click(object sender, RoutedEventArgs e)
+        {
+            // Implement logic to insert a column to the right
+        }
+
+        private void ClearColumn_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col != null)
+            {
+                foreach (var item in AnimatedDataGrid.ItemsSource)
+                {
+                    var row = item as dynamic;
+                    col.OnPastingCellClipboardContent(row, null);
+                }
+            }
+        }
+
+        private void ReadOnlyColumn_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col != null)
+                col.IsReadOnly = !col.IsReadOnly;
+        }
+
+        private void AlignLeft_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col != null)
+                col.CellStyle = new Style(typeof(DataGridCell)) { Setters = { new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Left) } };
+        }
+
+        private void AlignCenter_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col != null)
+                col.CellStyle = new Style(typeof(DataGridCell)) { Setters = { new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Center) } };
+        }
+
+        private void AlignRight_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col != null)
+                col.CellStyle = new Style(typeof(DataGridCell)) { Setters = { new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Right) } };
+        }
+
+        private void AlignJustify_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col != null)
+                col.CellStyle = new Style(typeof(DataGridCell)) { Setters = { new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Justify) } };
+        }
+
+        private void AlignTop_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col != null)
+                col.CellStyle = new Style(typeof(DataGridCell)) { Setters = { new Setter(VerticalAlignmentProperty, VerticalAlignment.Top) } };
+        }
+
+        private void AlignMiddle_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col != null)
+                col.CellStyle = new Style(typeof(DataGridCell)) { Setters = { new Setter(VerticalAlignmentProperty, VerticalAlignment.Center) } };
+        }
+
+        private void AlignBottom_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col != null)
+                col.CellStyle = new Style(typeof(DataGridCell)) { Setters = { new Setter(VerticalAlignmentProperty, VerticalAlignment.Bottom) } };
+        }
+
+        private void FilterContains_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col == null) return;
+
+            var binding = (col as DataGridBoundColumn)?.Binding as System.Windows.Data.Binding;
+            if (binding == null) return;
+
+            _currentFilterColumn = binding.Path.Path;
+            _currentFilterCondition = "Contains";
+            _currentFilterValue = PromptForFilterValue($"Enter value to filter '{col.Header}' (contains):");
+            if (string.IsNullOrEmpty(_currentFilterValue))
+            {
+                _collectionView.Filter = null;
+                return;
+            }
+
+            _collectionView.Filter = item =>
+            {
+                var prop = item.GetType().GetProperty(_currentFilterColumn);
+                if (prop == null) return true;
+                var value = prop.GetValue(item, null)?.ToString();
+                return value != null && value.IndexOf(_currentFilterValue, StringComparison.OrdinalIgnoreCase) >= 0;
+            };
+        }
+
+        private void FilterNotContains_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col == null) return;
+
+            var binding = (col as DataGridBoundColumn)?.Binding as System.Windows.Data.Binding;
+            if (binding == null) return;
+
+            _currentFilterColumn = binding.Path.Path;
+            _currentFilterCondition = "NotContains";
+            _currentFilterValue = PromptForFilterValue($"Enter value to filter '{col.Header}' (does not contain):");
+            if (string.IsNullOrEmpty(_currentFilterValue))
+            {
+                _collectionView.Filter = null;
+                return;
+            }
+
+            _collectionView.Filter = item =>
+            {
+                var prop = item.GetType().GetProperty(_currentFilterColumn);
+                if (prop == null) return true;
+                var value = prop.GetValue(item, null)?.ToString();
+                return value == null || value.IndexOf(_currentFilterValue, StringComparison.OrdinalIgnoreCase) < 0;
+            };
+        }
+
+        private void FilterEquals_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col == null) return;
+
+            var binding = (col as DataGridBoundColumn)?.Binding as System.Windows.Data.Binding;
+            if (binding == null) return;
+
+            _currentFilterColumn = binding.Path.Path;
+            _currentFilterCondition = "Equals";
+            _currentFilterValue = PromptForFilterValue($"Enter value to filter '{col.Header}' (equals):");
+            if (string.IsNullOrEmpty(_currentFilterValue))
+            {
+                _collectionView.Filter = null;
+                return;
+            }
+
+            _collectionView.Filter = item =>
+            {
+                var prop = item.GetType().GetProperty(_currentFilterColumn);
+                if (prop == null) return true;
+                var value = prop.GetValue(item, null)?.ToString();
+                return value != null && value.Equals(_currentFilterValue, StringComparison.OrdinalIgnoreCase);
+            };
+        }
+
+        private void FilterNotEquals_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col == null) return;
+
+            var binding = (col as DataGridBoundColumn)?.Binding as System.Windows.Data.Binding;
+            if (binding == null) return;
+
+            _currentFilterColumn = binding.Path.Path;
+            _currentFilterCondition = "NotEquals";
+            _currentFilterValue = PromptForFilterValue($"Enter value to filter '{col.Header}' (not equals):");
+            if (string.IsNullOrEmpty(_currentFilterValue))
+            {
+                _collectionView.Filter = null;
+                return;
+            }
+
+            _collectionView.Filter = item =>
+            {
+                var prop = item.GetType().GetProperty(_currentFilterColumn);
+                if (prop == null) return true;
+                var value = prop.GetValue(item, null)?.ToString();
+                return value == null || !value.Equals(_currentFilterValue, StringComparison.OrdinalIgnoreCase);
+            };
+        }
+
+        private void FilterByValue_Click(object sender, RoutedEventArgs e)
+        {
+            // Show a dialog to select/filter by value
+        }
+
+        private void HideColumn_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            if (col != null)
+                col.Visibility = Visibility.Collapsed;
+        }
+
+        private void ShowAllColumns_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var col in AnimatedDataGrid.Columns)
+                col.Visibility = Visibility.Visible;
+        }
+
+        private void ResetColumnWidth_Click(object sender, RoutedEventArgs e)
+        {
+            var col = GetContextColumn();
+            int idx = AnimatedDataGrid.Columns.IndexOf(col);
+            if (col != null && idx >= 0 && idx < DefaultColumnWidths.Length)
+                col.Width = DefaultColumnWidths[idx];
+        }
+
+        private void ExportToExcel_Click(object sender, RoutedEventArgs e)
+        {
+            // Implement export logic (e.g., using CsvHelper or EPPlus)
+            MessageBox.Show("Export to Excel not implemented yet.");
+        }
+
+        private void CopyCell_Click(object sender, RoutedEventArgs e)
+        {
+            if (AnimatedDataGrid.CurrentCell != null && AnimatedDataGrid.CurrentCell.Item != null && AnimatedDataGrid.CurrentCell.Column != null)
+            {
+                var binding = (AnimatedDataGrid.CurrentCell.Column as DataGridBoundColumn)?.Binding as System.Windows.Data.Binding;
+                if (binding != null)
+                {
+                    var propertyName = binding.Path.Path;
+                    var value = AnimatedDataGrid.CurrentCell.Item.GetType().GetProperty(propertyName)?.GetValue(AnimatedDataGrid.CurrentCell.Item, null);
+                    Clipboard.SetText(value?.ToString() ?? string.Empty);
+                }
+            }
+        }
+
+        private void PasteCell_Click(object sender, RoutedEventArgs e)
+        {
+            if (AnimatedDataGrid.CurrentCell != null && AnimatedDataGrid.CurrentCell.Item != null && AnimatedDataGrid.CurrentCell.Column != null)
+            {
+                var binding = (AnimatedDataGrid.CurrentCell.Column as DataGridBoundColumn)?.Binding as System.Windows.Data.Binding;
+                if (binding != null)
+                {
+                    var propertyName = binding.Path.Path;
+                    var prop = AnimatedDataGrid.CurrentCell.Item.GetType().GetProperty(propertyName);
+                    if (prop != null && prop.CanWrite)
+                    {
+                        var clipboardText = Clipboard.GetText();
+                        prop.SetValue(AnimatedDataGrid.CurrentCell.Item, clipboardText);
+                        AnimatedDataGrid.Items.Refresh();
+                    }
+                }
+            }
+        }
+
+        private string PromptForFilterValue(string prompt)
+        {
+            return Microsoft.VisualBasic.Interaction.InputBox(prompt, "Filter", "");
+        }
+
+        private void ClearFilter_Click(object sender, RoutedEventArgs e)
+        {
+            _collectionView.Filter = null;
+        }
+
+        private async void ExtractFacebookPostId_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string input = PromptForInput("Enter Facebook Post URL or Input:", "Extract Facebook Post ID");
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    MessageBox.Show("Input is required.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                string extractIdCommand = $"[Facebook][Post][ExtractId, {input}]";
+                var tokens = new Dictionary<string, string>
+                {
+                    ["access_token"] = ConfigurationManager.AppSettings["access_token"],
+                    ["c_user_token"] = ConfigurationManager.AppSettings["c_user_token"],
+                    ["xs_token"] = ConfigurationManager.AppSettings["xs_token"]
+                };
+
+                // Extract Post ID (can be fast, so keep on UI thread)
+                CommandResult idResult = await Task.Run(() => CommandDispatcher.Execute(extractIdCommand, tokens));
+                if (!idResult.Success)
+                {
+                    MessageBox.Show($"Failed to extract Post ID:\n{idResult.Output}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                string postId = idResult.Output?.Trim();
+                if (string.IsNullOrWhiteSpace(postId))
+                {
+                    MessageBox.Show("No Post ID was extracted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                MessageBox.Show($"Extracting comments for Post ID: {postId}", "Extracting Comments", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Extract Comments in background thread
+                CommandResult commentsResult = await Task.Run(() =>
+                    CommandDispatcher.Execute($"[Facebook][Post][ReadComments, {postId}]", tokens)
+                );
+
+                if (!commentsResult.Success)
+                {
+                    MessageBox.Show($"Failed to extract comments:\n{commentsResult.Output}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Parse and update UI on UI thread
+                var commentsJson = commentsResult.Output;
+                var table = JsonConvert.DeserializeObject<DataTable>(commentsJson);
+                SetCommentsTable(table);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An unexpected error occurred:\n{ex.Message}", "Critical Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private string PromptForInput(string message, string title)
+        {
+            // You can replace this with a custom dialog for better UX
+            return Microsoft.VisualBasic.Interaction.InputBox(message, title, "");
+        }
+
+        private void SetCommentsTable(DataTable table)
+        {
+            _allCommentsTable = table;
+            _totalPages = (int)Math.Ceiling((double)_allCommentsTable.Rows.Count / _pageSize);
+            _currentPage = 1;
+            UpdatePagedComments();
+            UpdatePaginationPanel();
+        }
+
+        private void UpdatePagedComments()
+        {
+            if (_allCommentsTable == null) return;
+            var paged = _allCommentsTable.Clone();
+            int start = (_currentPage - 1) * _pageSize;
+            int end = Math.Min(start + _pageSize, _allCommentsTable.Rows.Count);
+            for (int i = start; i < end; i++)
+                paged.ImportRow(_allCommentsTable.Rows[i]);
+            AnimatedDataGrid.ItemsSource = paged.DefaultView;
+            UpdatePaginationPanel();
+        }
+
+        private void UpdatePaginationPanel()
+        {
+            PaginationPanel.Children.Clear();
+            for (int i = 1; i <= _totalPages; i++)
+            {
+                var btn = new Button
+                {
+                    Content = i.ToString(),
+                    Margin = new Thickness(4, 0, 4, 0),
+                    MinWidth = 32,
+                    MinHeight = 32,
+                    Style = (Style)FindResource("AnimatedGlowButtonStyle"),
+                    Tag = i
+                };
+                if (i == _currentPage)
+                {
+                    btn.FontWeight = FontWeights.Bold;
+                    btn.Background = new SolidColorBrush(Color.FromRgb(0, 207, 255));
+                    btn.Foreground = Brushes.White;
+                }
+                btn.Click += (s, e) =>
+                {
+                    CurrentPage = (int)((Button)s).Tag;
+                    UpdatePaginationPanel();
+                };
+
+                // Add a simple animation on load
+                btn.Loaded += (s, e) =>
+                {
+                    var anim = new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(250))
+                    {
+                        EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+                    };
+                    btn.BeginAnimation(OpacityProperty, anim);
+                };
+
+                PaginationPanel.Children.Add(btn);
+            }
+        }
+
+        private void CopySelectedCellsToClipboard()
+        {
+            if (AnimatedDataGrid.SelectedCells == null || AnimatedDataGrid.SelectedCells.Count == 0)
+                return;
+
+            // Group selected cells by row
+            var rowGroups = AnimatedDataGrid.SelectedCells
+                .GroupBy(sc => sc.Item)
+                .OrderBy(g => AnimatedDataGrid.Items.IndexOf(g.Key));
+
+            var lines = new List<string>();
+
+            // Add header if all columns are selected
+            var selectedColumns = AnimatedDataGrid.SelectedCells.Select(sc => sc.Column).Distinct().OrderBy(c => c.DisplayIndex).ToList();
+            if (selectedColumns.Count == AnimatedDataGrid.Columns.Count)
+            {
+                lines.Add(string.Join("\t", AnimatedDataGrid.Columns.OrderBy(c => c.DisplayIndex).Select(c => c.Header?.ToString() ?? "")));
+            }
+
+            foreach (var rowGroup in rowGroups)
+            {
+                var row = rowGroup.Key;
+                var cells = rowGroup.OrderBy(sc => sc.Column.DisplayIndex);
+                var values = new List<string>();
+                foreach (var cell in cells)
+                {
+                    object value = "";
+                    if (row is DataRowView drv)
+                    {
+                        // Use column header as key for DataRowView
+                        var colName = cell.Column.Header?.ToString();
+                        if (!string.IsNullOrEmpty(colName) && drv.DataView.Table.Columns.Contains(colName))
+                            value = drv[colName];
+                    }
+                    else
+                    {
+                        // Fallback for strongly-typed objects
+                        var binding = (cell.Column as DataGridBoundColumn)?.Binding as System.Windows.Data.Binding;
+                        if (binding != null)
+                        {
+                            var propertyName = binding.Path.Path;
+                            value = row.GetType().GetProperty(propertyName)?.GetValue(row, null);
+                        }
+                    }
+                    values.Add(value?.ToString() ?? "");
+                }
+                lines.Add(string.Join("\t", values));
+            }
+
+            Clipboard.SetText(string.Join(Environment.NewLine, lines));
+        }
+
+        private void RowNumberButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Select the entire row when the row number is clicked
+            if (sender is Button btn)
+            {
+                // Find the parent DataGridRow in the visual tree
+                var row = FindParent<DataGridRow>(btn);
+                if (row != null)
+                {
+                    row.IsSelected = true;
+                }
+            }
+        }
+
+        // Helper to find parent of a specific type in the visual tree
+        private static T FindParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            DependencyObject parent = child;
+            while (parent != null && !(parent is T))
+            {
+                parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
+            }
+            return parent as T;
+        }
+
+        private void AnimatedDataGrid_LoadingRow(object sender, DataGridRowEventArgs e)
+        {
+            // Set the row header to the row number (1-based)
+            e.Row.Header = (e.Row.GetIndex() + 1).ToString();
+        }
+
+        private void AnimatedDataGrid_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        {
+            // Optionally, hide the RowNumber property if it exists in your data model to avoid duplicate columns
+            if (e.PropertyName == "RowNumber")
+            {
+                e.Cancel = true;
+            }
+        }
+    }
+}
+
