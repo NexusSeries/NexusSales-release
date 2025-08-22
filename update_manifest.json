@@ -1,20 +1,21 @@
 {
-  "LatestVersion": "2.1.0",
-  "ReleaseNotesUrl": "https://github.com/NexusSeries/NexusSales-release/releases/tag/v1.1",
+  "LatestVersion": "2.1.0", // CHANGE: Update to the new version string (e.g., "2.2.0")
+  "ReleaseNotesUrl": "https://github.com/NexusSeries/NexusSales-release/releases/tag/v1.1", // CHANGE: Update to the new release notes URL
   "Files": [
     {
       "Path": "NexusSales.UI.exe",
-      "Hash": "856835207abcb97c1b57b8c14a9f88d500a13ef1889a9ff22d7725c81eed6fc8",
-      "Size": 53400000,
-      "DownloadUrl": "https://github.com/NexusSeries/NexusSales-release/releases/download/v1.1/NexusSales.UI.exe",
+      "Hash": "856835207abcb97c1b57b8c14a9f88d500a13ef1889a9ff22d7725c81eed6fc8", // CHANGE: Update to the new SHA256 hash of the new file
+      "Size": 53400000, // CHANGE: Update to the new file size in bytes
+      "DownloadUrl": "https://github.com/NexusSeries/NexusSales-release/releases/download/v1.1/NexusSales.UI.exe", // CHANGE: Update to the new download URL
       "Description": "Main application executable."
     },
     {
       "Path": "dependencies.zip",
-      "Hash": "f7564bc3bd67246ce59c3801b3f16a838406993c9562e9367534c9d550e3e3da",
-      "Size": 3690000,
-      "DownloadUrl": "https://github.com/NexusSeries/NexusSales-release/releases/download/v1.1/dependencies.zip",
+      "Hash": "f7564bc3bd67246ce59c3801b3f16a838406993c9562e9367534c9d550e3e3da", // CHANGE: Update to the new SHA256 hash of the new archive
+      "Size": 3690000, // CHANGE: Update to the new file size in bytes
+      "DownloadUrl": "https://github.com/NexusSeries/NexusSales-release/releases/download/v1.1/dependencies.zip", // CHANGE: Update to the new download URL
       "Description": "All required dependencies in a single archive."
     }
-  ]
+  ],
+  "Signature": "..." // ADD/CHANGE: Remove the old signature, then add the new base64-encoded signature after signing the manifest (excluding this field)
 }
